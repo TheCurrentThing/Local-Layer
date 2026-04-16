@@ -40,7 +40,7 @@ export function MenuPreviewSection({
               Categories
             </p>
             <div className="mt-3 space-y-2">
-              {categories.map((category) => (
+              {categories.filter((c) => c.items.length > 0).map((category) => (
                 <div
                   key={category.id}
                   className="rounded-xl px-3 py-2 text-sm font-medium text-[var(--color-foreground)]"
@@ -52,36 +52,48 @@ export function MenuPreviewSection({
           </div>
 
           <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
-            <div className="space-y-8">
-              {categories.slice(0, 2).map((category) => (
-                <div key={category.id}>
-                  <h3 className="font-heading text-2xl text-[var(--color-foreground)]">
-                    {category.name}
-                  </h3>
-                  <div className="mt-4 space-y-4">
-                    {category.items.slice(0, 4).map((item) => (
-                      <div
-                        key={item.id}
-                        className="border-b border-[var(--color-border)] pb-4 last:border-0"
-                      >
-                        <div className="flex items-baseline gap-3">
-                          <h4 className="text-xl font-bold text-[var(--color-foreground)]">
-                            {item.name}
-                          </h4>
-                          <span className="hidden flex-1 border-b border-dotted border-[var(--color-border)] md:block" />
-                          <span className="text-xl font-bold text-[var(--color-primary)]">
-                            ${item.price.toFixed(2)}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm text-[var(--color-foreground)]/70">
-                          {item.description}
-                        </p>
+            {(() => {
+              const preview = categories.filter((c) => c.items.length > 0).slice(0, 2);
+              if (preview.length === 0) {
+                return (
+                  <p className="text-sm text-[var(--color-foreground)]/50">
+                    Menu items coming soon.
+                  </p>
+                );
+              }
+              return (
+                <div className="space-y-8">
+                  {preview.map((category) => (
+                    <div key={category.id}>
+                      <h3 className="font-heading text-2xl text-[var(--color-foreground)]">
+                        {category.name}
+                      </h3>
+                      <div className="mt-4 space-y-4">
+                        {category.items.slice(0, 4).map((item) => (
+                          <div
+                            key={item.id}
+                            className="border-b border-[var(--color-border)] pb-4 last:border-0"
+                          >
+                            <div className="flex items-baseline gap-3">
+                              <h4 className="text-xl font-bold text-[var(--color-foreground)]">
+                                {item.name}
+                              </h4>
+                              <span className="hidden flex-1 border-b border-dotted border-[var(--color-border)] md:block" />
+                              <span className="text-xl font-bold text-[var(--color-primary)]">
+                                ${item.price.toFixed(2)}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm text-[var(--color-foreground)]/70">
+                              {item.description}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         </div>
       </div>
