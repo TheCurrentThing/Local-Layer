@@ -6,11 +6,11 @@ const editableFields: Array<{
   key: keyof ThemeTokens;
   label: string;
 }> = [
-  { key: "primary", label: "Primary Button Color" },
+  { key: "primary", label: "Primary Button" },
   { key: "accent", label: "Accent Color" },
   { key: "background", label: "Page Background" },
-  { key: "surface", label: "Box / Card Color" },
-  { key: "text", label: "Main Text Color" },
+  { key: "surface", label: "Card / Box Color" },
+  { key: "text", label: "Main Text" },
 ];
 
 export function ThemeCustomizer({
@@ -21,35 +21,39 @@ export function ThemeCustomizer({
   onChange: (key: keyof ThemeTokens, value: string) => void;
 }) {
   return (
-    <details className="rounded-[1.15rem] border border-white/[0.08] bg-[#171717]">
-      <summary className="cursor-pointer list-none px-5 py-5">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-          Fine Tune
-        </p>
-        <p className="mt-2 text-base font-semibold text-white">Customize colors</p>
-        <p className="mt-2 text-sm leading-6 text-white/58">
-          Use this only when the preset is close and you need a tighter brand match.
-        </p>
+    <details className="rounded-[1rem] border border-white/[0.07] bg-white/[0.015]">
+      <summary className="cursor-pointer list-none px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
+              Fine Tune
+            </p>
+            <p className="mt-1 text-sm font-semibold text-white/70">Customize colors</p>
+          </div>
+          <span className="shrink-0 rounded-full border border-white/[0.07] px-2.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-white/30">
+            Advanced
+          </span>
+        </div>
       </summary>
 
-      <div className="grid gap-4 border-t border-white/[0.08] px-5 py-5 md:grid-cols-2">
+      <div className="grid gap-3 border-t border-white/[0.06] px-4 py-4 md:grid-cols-2">
         {editableFields.map((field) => (
-          <label key={field.key} className="block space-y-2">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
+          <label key={field.key} className="block space-y-1.5">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-white/35">
               {field.label}
             </span>
-            <div className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-black/20 px-3 py-3">
+            <div className="flex items-center gap-3 rounded-[0.85rem] border border-white/[0.08] bg-black/20 px-3 py-2.5">
               <input
                 type="color"
                 value={tokens[field.key]}
                 onChange={(event) => onChange(field.key, event.target.value)}
-                className="h-10 w-14 rounded-xl border-0 bg-transparent p-0"
+                className="h-8 w-10 shrink-0 rounded-lg border-0 bg-transparent p-0"
               />
-              <div>
-                <p className="text-sm font-semibold text-white">
+              <div className="min-w-0">
+                <p className="truncate font-mono text-xs font-semibold text-white/75">
                   {tokens[field.key]}
                 </p>
-                <p className="text-xs text-white/45">Custom override</p>
+                <p className="text-[10px] text-white/35">Override</p>
               </div>
             </div>
           </label>

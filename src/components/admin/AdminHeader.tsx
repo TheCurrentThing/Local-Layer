@@ -1,84 +1,219 @@
+"use client";
+
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export function AdminHeader({
-  eyebrow = "Control Surface",
+  eyebrow = "Overview",
   title,
-  description,
+  description: _description,
   previewHref = "/",
 }: {
   eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   previewHref?: string;
 }) {
   return (
-    <div className="admin-panel overflow-hidden rounded-[1.5rem]">
-      <div className="flex flex-col gap-4 border-b border-white/[0.08] px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-              {eyebrow}
-            </p>
-            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/58">
-              Live System
-            </div>
-            <Badge
-              variant="secondary"
-              className="rounded-full border border-white/10 bg-white/[0.04] font-mono text-[10px] tracking-[0.2em] text-white/58"
-            >
-              Operator
-            </Badge>
-          </div>
-          <h1 className="mt-3 font-heading text-[2.35rem] leading-none text-white sm:text-[2.8rem]">
-            {title}
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-white/60 sm:text-base">
-            {description}
-          </p>
-        </div>
+    <header
+      style={{
+        height: 52,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 16px",
+        background: "#0d0d10",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        flexShrink: 0,
+        zIndex: 30,
+        gap: 16,
+      }}
+    >
+      {/* ── Left: breadcrumb path ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          minWidth: 0,
+          overflow: "hidden",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            color: "#52525c",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Admin
+        </span>
 
-        <div className="flex flex-wrap gap-3">
-          <Button
-            asChild
-            variant="ghost"
-            className="rounded-[0.95rem] border border-white/10 bg-white/[0.03] px-4 py-2.5 text-white/72 hover:bg-white/[0.06]"
-          >
-            <Link href="/admin">Overview</Link>
-          </Button>
-          <Button
-            asChild
-            className="rounded-[0.95rem] border border-[var(--color-primary)] bg-[var(--color-primary)] px-4 py-2.5 text-[var(--color-primary-text)] shadow-[0_0_24px_rgba(181,84,61,0.18)]"
-          >
-            <a href={previewHref} target="_blank" rel="noopener noreferrer">
-              Preview Website
-            </a>
-          </Button>
-        </div>
+        {/* chevron */}
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 11 11"
+          fill="none"
+          aria-hidden="true"
+          style={{ flexShrink: 0 }}
+        >
+          <path
+            d="M3.5 3l3.5 2.5-3.5 2.5"
+            stroke="#38383f"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        <span
+          style={{
+            fontSize: 10,
+            color: "#6b6b75",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {eyebrow}
+        </span>
+
+        {/* chevron */}
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 11 11"
+          fill="none"
+          aria-hidden="true"
+          style={{ flexShrink: 0 }}
+        >
+          <path
+            d="M3.5 3l3.5 2.5-3.5 2.5"
+            stroke="#2a2a30"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: "#c9c7c0",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {title}
+        </span>
       </div>
 
-      <div className="grid gap-3 px-5 py-3 text-sm text-white/48 sm:grid-cols-3">
-        <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-            {eyebrow}
-          </p>
-          <p className="mt-1 text-white/68">Current workspace channel</p>
+      {/* ── Right: status + actions ── */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexShrink: 0,
+        }}
+      >
+        {/* Live pill */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "4px 10px",
+            borderRadius: 6,
+            background: "rgba(255,255,255,0.028)",
+            border: "1px solid rgba(255,255,255,0.055)",
+          }}
+        >
+          <span
+            className="animate-pulse-dot"
+            style={{
+              display: "inline-block",
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#4ade80",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 10,
+              color: "#4ade80",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Live
+          </span>
         </div>
-        <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-            System Role
-          </p>
-          <p className="mt-1 text-white/68">Live publishing control surface</p>
-        </div>
-        <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-            Mode
-          </p>
-          <p className="mt-1 text-white/68">Warm terminal, non-technical safe</p>
-        </div>
+
+        {/* Overview */}
+        <Link
+          href="/admin"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "5px 12px",
+            borderRadius: 6,
+            background: "rgba(255,255,255,0.028)",
+            border: "1px solid rgba(255,255,255,0.055)",
+            color: "#8a8894",
+            textDecoration: "none",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+        >
+          Overview
+        </Link>
+
+        {/* Preview */}
+        <a
+          href={previewHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "5px 12px",
+            borderRadius: 6,
+            background: "rgba(217,119,6,0.08)",
+            border: "1px solid rgba(217,119,6,0.18)",
+            color: "#d97706",
+            textDecoration: "none",
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = "rgba(217,119,6,0.15)";
+            el.style.borderColor = "rgba(217,119,6,0.32)";
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.background = "rgba(217,119,6,0.08)";
+            el.style.borderColor = "rgba(217,119,6,0.18)";
+          }}
+        >
+          Preview
+        </a>
       </div>
-    </div>
+    </header>
   );
 }
-

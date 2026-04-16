@@ -31,13 +31,9 @@
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -47,94 +43,256 @@ body {
   font-family: var(--font-body);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
 
-img {
+/* ─────────────────────────────────────────────────────
+   ANIMA ADMIN DESIGN SYSTEM
+   Applied globally so all admin components can use
+   these classes without importing anything.
+───────────────────────────────────────────────────── */
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #252528; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #35353a; }
+
+/* ── Panel system ── */
+.panel {
+  background: rgba(255,255,255,0.012);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.045);
+  flex-shrink: 0;
+}
+.panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.12s;
+}
+.panel-row:last-child { border-bottom: none; }
+.panel-row:hover { background: rgba(255,255,255,0.025); }
+.panel-row.active { background: rgba(217,119,6,0.07); }
+
+/* ── Typography utilities ── */
+.label-upper {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #5a5a64;
+}
+.label-upper-dim {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #3e3e46;
+}
+.section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3e3e48;
   display: block;
-  max-width: 100%;
+  margin-bottom: 6px;
+  padding-left: 2px;
 }
 
-@layer components {
-  .admin-terminal-shell {
-    background:
-      radial-gradient(circle at top left, rgba(181, 84, 61, 0.18), transparent 28%),
-      radial-gradient(circle at top right, rgba(227, 194, 122, 0.08), transparent 24%),
-      linear-gradient(180deg, #080808 0%, #101010 100%);
-  }
+/* ── Input ── */
+.ctrl-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 7px;
+  color: #e2e0d8;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.ctrl-input:focus { border-color: rgba(217,119,6,0.4); }
+.ctrl-input::placeholder { color: #3a3a42; }
 
-  .admin-grid-bg {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
-    background-size: 24px 24px, 24px 24px, 100% 100%;
-    background-position: 0 0, 0 0, 0 0;
-  }
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  background: #d97706;
+  color: #fff;
+  transition: background 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+.btn-primary:hover { background: #b45309; }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  background: rgba(255,255,255,0.035);
+  color: #8a8894;
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  font-family: inherit;
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.065);
+  border-color: rgba(255,255,255,0.11);
+  color: #aeacb6;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  background: rgba(239,68,68,0.08);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.18);
+  transition: background 0.12s;
+  font-family: inherit;
+}
+.btn-danger:hover { background: rgba(239,68,68,0.14); }
+
+/* ── Status badges ── */
+.badge-live {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  background: rgba(74,222,128,0.08); color: #4ade80;
+  border: 1px solid rgba(74,222,128,0.2);
+}
+.badge-scheduled {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  background: rgba(251,191,36,0.08); color: #fbbf24;
+  border: 1px solid rgba(251,191,36,0.2);
+}
+.badge-off {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  background: rgba(255,255,255,0.04); color: #4b4b54;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 0; }
+
+/* ── Action tile (overview command tiles) ── */
+.action-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.018);
+  border: 1px solid rgba(255,255,255,0.058);
+  text-decoration: none;
+  transition: background 0.13s, border-color 0.13s, transform 0.13s;
+  cursor: pointer;
+}
+.action-tile:hover {
+  background: rgba(255,255,255,0.038);
+  border-color: rgba(217,119,6,0.22);
+  transform: translateY(-1px);
+}
+
+/* ── Glow utilities ── */
+.glow-amber {
+  box-shadow: 0 0 0 1px rgba(217,119,6,0.2), 0 0 18px 0 rgba(217,119,6,0.07);
+}
+.glow-green {
+  box-shadow: 0 0 0 1px rgba(74,222,128,0.2), 0 0 10px 0 rgba(74,222,128,0.06);
+}
+
+/* ── Keyframes ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in  { animation: fade-in  0.2s ease-out both; }
+.animate-slide-in { animation: slide-right 0.18s ease-out both; }
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* ── Time / date picker ── */
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.4);
+}
+
+/* ─────────────────────────────────────────────────────
+   LEGACY ADMIN CLASSES (kept for non-Anima pages)
+───────────────────────────────────────────────────── */
+@layer components {
+  .admin-terminal-shell { background: #0c0c0e; }
+  .admin-grid-bg { background-image: none; }
 
   .admin-panel {
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
-      rgba(15, 15, 15, 0.92);
-    box-shadow:
-      0 18px 60px rgba(0, 0, 0, 0.28),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(18px);
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(255, 255, 255, 0.018);
   }
-
-  .admin-panel::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-    pointer-events: none;
-  }
+  .admin-panel::before { display: none; }
 
   .admin-panel-hover {
-    transition:
-      transform 180ms ease,
-      border-color 180ms ease,
-      box-shadow 180ms ease,
-      background-color 180ms ease;
+    transition: border-color 130ms ease, background 130ms ease;
   }
-
   .admin-panel-hover:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow:
-      0 22px 70px rgba(0, 0, 0, 0.34),
-      0 0 0 1px rgba(255, 255, 255, 0.03),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .admin-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
   }
-
-  .admin-scrollbar::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  .admin-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .admin-scrollbar::-webkit-scrollbar-thumb {
-    border: 2px solid transparent;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.14);
-    background-clip: padding-box;
-  }
-
-  .admin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
-    background-clip: padding-box;
-  }
+  .admin-scrollbar::-webkit-scrollbar { width: 3px; height: 3px; }
+  .admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .admin-scrollbar::-webkit-scrollbar-thumb { border-radius: 9999px; background: rgba(255, 255, 255, 0.1); }
+  .admin-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
 }

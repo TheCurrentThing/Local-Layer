@@ -19,5 +19,18 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "branch-kit.vercel.app_admin_1omdtw",
+    "branch-kit.vercel.app_admin_1q3vwi",
+    "workspace",
+    "src/pages",
+    "src/sections",
+    "src/App.tsx",
+    "src/index.tsx",
+    "vite.config.ts",
+    "tailwind.config.js",
+    "tsconfig.app.json",
+    "tsconfig.node.json"
+  ]
 }

@@ -18,6 +18,8 @@ type AdminPageProps = {
 
 export default async function AdminPhotosPage({ searchParams }: AdminPageProps) {
   const payload = await getAdminSitePayload();
+  const livePhotoCount = payload.galleryImages.filter((image) => image.isActive).length;
+  const leadImage = payload.galleryImages[0] ?? null;
 
   return (
     <AdminShell
@@ -31,14 +33,60 @@ export default async function AdminPhotosPage({ searchParams }: AdminPageProps) 
     >
       <AdminFeedback searchParams={searchParams} />
 
-      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+        <aside className="admin-panel min-h-0 overflow-hidden rounded-[1.5rem]">
+          <div className="border-b border-white/[0.07] px-4 py-3">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
+              Live Output
+            </p>
+            <h2 className="mt-1 text-[13px] font-medium text-white/80">Gallery snapshot</h2>
+          </div>
+
+          <div className="space-y-4 p-4 text-sm text-white/62">
+            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Status</p>
+              <p className="mt-3 text-base font-semibold text-white">{livePhotoCount} photos live</p>
+              <p className="mt-2 text-sm text-white/55">
+                The gallery feed is pulling from the active media registry.
+              </p>
+            </div>
+
+            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Lead Asset</p>
+              {leadImage ? (
+                <>
+                  <div className="mt-3 overflow-hidden rounded-[0.95rem] border border-white/[0.08] bg-black/30">
+                    <img
+                      src={leadImage.src}
+                      alt={leadImage.alt}
+                      className="h-40 w-full object-cover"
+                    />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-white">{leadImage.alt}</p>
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-white/55">
+                  No lead asset yet. Add a photo from the right control lane.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Actions</p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <PreviewLink href="/" label="Preview Homepage" />
+              </div>
+            </div>
+          </div>
+        </aside>
+
         <section className="admin-panel admin-scrollbar min-h-0 overflow-y-auto rounded-[1.5rem]">
-          <div className="border-b border-white/[0.08] px-5 py-4">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
+          <div className="border-b border-white/[0.07] px-4 py-3">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
               Gallery Library
             </p>
-            <h2 className="mt-2 text-[1.45rem] font-semibold text-white">Current gallery photos</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/55">
+            <h2 className="mt-1 text-[13px] font-medium text-white/80">Current gallery photos</h2>
+            <p className="mt-1 max-w-3xl text-xs text-white/38">
               Keep the gallery clean and descriptive. Each record supports either a direct image URL or an uploaded replacement file.
             </p>
           </div>
@@ -99,18 +147,21 @@ export default async function AdminPhotosPage({ searchParams }: AdminPageProps) 
         </section>
 
         <aside className="admin-panel rounded-[1.5rem]">
-          <div className="border-b border-white/[0.08] px-5 py-4">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
+          <div className="border-b border-white/[0.07] px-4 py-3">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
               Control Stack
             </p>
-            <h2 className="mt-2 text-[1.35rem] font-semibold text-white">Add or preview assets</h2>
+            <h2 className="mt-1 text-[13px] font-medium text-white/80">Add or preview assets</h2>
           </div>
 
           <div className="admin-scrollbar space-y-4 overflow-y-auto p-4">
             <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4 text-sm text-white/62">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Status</p>
               <p className="mt-3">
-                {payload.galleryImages.length} photos in the live gallery.
+                {payload.galleryImages.length} photo records loaded.
+              </p>
+              <p className="mt-2 text-white/52">
+                New uploads appear in the center registry immediately after save.
               </p>
             </div>
 

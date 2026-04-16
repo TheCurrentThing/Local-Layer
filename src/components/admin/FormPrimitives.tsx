@@ -1,7 +1,6 @@
 import type { HTMLInputTypeAttribute, ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   PendingDeleteButton,
   PendingSubmitButton,
@@ -64,27 +63,25 @@ export function AdminCard({
   eyebrow?: string;
 }) {
   return (
-    <Card
+    <div
       className={cn(
-        "admin-panel overflow-hidden rounded-[1.65rem] border-white/[0.08] bg-transparent text-white",
+        "admin-panel overflow-hidden border-white/[0.06] bg-white/[0.012] text-white",
         className,
       )}
     >
-      <CardHeader className="border-b border-white/[0.08] px-5 py-4">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
+      <div className="flex items-baseline gap-3 border-b border-white/[0.07] px-4 py-3">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
           {eyebrow ?? "System Panel"}
-        </p>
-        <CardTitle className="mt-2 text-[1.45rem] leading-tight text-white">
-          {title}
-        </CardTitle>
+        </span>
+        <span className="text-[13px] font-semibold text-white/80">{title}</span>
         {description ? (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">{description}</p>
+          <span className="ml-auto text-xs text-white/38">{description}</span>
         ) : null}
-      </CardHeader>
-      <CardContent className={cn("space-y-4 px-5 py-4", bodyClassName)}>
+      </div>
+      <div className={cn("space-y-4 px-4 py-4", bodyClassName)}>
         {children}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -100,7 +97,7 @@ export function AdminInput({
 }: InputProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/48">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
         {label}
       </span>
       <input
@@ -111,7 +108,7 @@ export function AdminInput({
         required={required}
         step={step}
         min={min}
-        className="w-full rounded-[1rem] border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)] focus:bg-black/40"
+        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)]/60 focus:bg-black/40"
       />
     </label>
   );
@@ -127,7 +124,7 @@ export function AdminTextarea({
 }: TextareaProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/48">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
         {label}
       </span>
       <textarea
@@ -136,7 +133,7 @@ export function AdminTextarea({
         rows={rows}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-[1rem] border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)] focus:bg-black/40"
+        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)]/60 focus:bg-black/40"
       />
     </label>
   );
@@ -148,7 +145,7 @@ export function AdminCheckbox({
   defaultChecked,
 }: CheckboxProps) {
   return (
-    <label className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-black/30 px-4 py-3 text-sm text-white transition hover:border-white/16">
+    <label className="flex items-center gap-3 rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white transition hover:border-white/16">
       <input
         name={name}
         type="checkbox"
@@ -168,13 +165,13 @@ export function AdminSelect({
 }: SelectProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/48">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
         {label}
       </span>
       <select
         name={name}
         defaultValue={defaultValue}
-        className="w-full rounded-[1rem] border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--color-primary)] focus:bg-black/40"
+        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[var(--color-primary)]/60 focus:bg-black/40"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -194,14 +191,14 @@ export function AdminFileInput({
 }: FileInputProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/48">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
         {label}
       </span>
       <input
         name={name}
         type="file"
         accept={accept}
-        className="w-full rounded-[1rem] border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/70 outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--color-primary)] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white/70 outline-none transition file:mr-3 file:rounded-[6px] file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
       />
       {helperText ? (
         <p className="text-xs text-white/45">{helperText}</p>

@@ -1,317 +1,556 @@
 import Link from "next/link";
+import {
+  Sparkle,
+  ForkKnife,
+  Clock,
+  House,
+  ArrowUpRight,
+  ChartLine,
+  Broadcast,
+} from "@phosphor-icons/react/dist/ssr";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminSitePayload } from "@/lib/queries";
 
-function buildActivityFeed({
-  announcementLive,
-  featuredSpecialLabel,
-  visibleSectionCount,
-  photoCount,
-}: {
-  announcementLive: boolean;
-  featuredSpecialLabel: string;
-  visibleSectionCount: number;
-  photoCount: number;
-}) {
-  return [
-    announcementLive
-      ? "Announcement bar is live on the homepage."
-      : "Announcement bar is currently offline.",
-    `Primary special: ${featuredSpecialLabel}.`,
-    `${visibleSectionCount} homepage sections are currently visible to guests.`,
-    `${photoCount} gallery photos are available in the live library.`,
-  ];
+/* ─── inline primitives (server-safe, no hooks) ───────────────── */
+
+function Dot({ on }: { on: boolean }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: 6,
+        height: 6,
+        borderRadius: "50%",
+        background: on ? "#4ade80" : "#2e2e35",
+        flexShrink: 0,
+        ...(on ? { animation: "pulse-dot 2s ease-in-out infinite" } : {}),
+      }}
+    />
+  );
 }
+
+function SysRow({ label, value, on }: { label: string; value: string; on?: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "8px 0",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+      }}
+    >
+      <span style={{ fontSize: 11, color: "#55555e" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {on !== undefined && <Dot on={on} />}
+        <span style={{ fontSize: 11, fontWeight: 500, color: "#9896a0" }}>{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  sub,
+  amber,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  amber?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        padding: "14px 16px",
+        borderRadius: 9,
+        background: amber ? "rgba(217,119,6,0.06)" : "rgba(255,255,255,0.022)",
+        border: amber ? "1px solid rgba(217,119,6,0.16)" : "1px solid rgba(255,255,255,0.06)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+      }}
+    >
+      <span className="label-upper">{label}</span>
+      <span
+        style={{
+          fontSize: 26,
+          fontWeight: 700,
+          color: amber ? "#d97706" : "#e2e0d8",
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </span>
+      <span style={{ fontSize: 11, color: "#4b4b54" }}>{sub}</span>
+    </div>
+  );
+}
+
+/* ActionTile uses the .action-tile CSS class (defined in globals.css)
+   so hover effects work without client-side event handlers */
+function ActionTile({
+  label,
+  desc,
+  href,
+  icon: Icon,
+}: {
+  label: string;
+  desc: string;
+  href: string;
+  icon: PhosphorIcon;
+}) {
+  return (
+    <Link href={href} className="action-tile">
+      <div
+        style={{
+          borderRadius: 7,
+          padding: "7px",
+          background: "rgba(217,119,6,0.1)",
+          border: "1px solid rgba(217,119,6,0.18)",
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={13} style={{ color: "#d97706", display: "block" }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: "#c9c7c0", margin: 0 }}>{label}</p>
+        <p style={{ fontSize: 11, color: "#4b4b54", marginTop: 3 }}>{desc}</p>
+      </div>
+      <ArrowUpRight size={13} style={{ color: "#3a3a42", flexShrink: 0, marginTop: 2 }} />
+    </Link>
+  );
+}
+
+/* ─── page ──────────────────────────────────────────────────────── */
 
 export default async function AdminDashboardPage() {
   const payload = await getAdminSitePayload();
+
   const totalItems = payload.menuCategories.reduce(
-    (count, category) => count + category.items.length,
+    (count, cat) => count + cat.items.length,
     0,
   );
+
   const featuredSpecial =
-    payload.specials.find((special) => special.isFeatured && special.isActive) ??
-    payload.specials.find((special) => special.isActive) ??
+    payload.specials.find((s) => s.isFeatured && s.isActive) ??
+    payload.specials.find((s) => s.isActive) ??
     null;
-  const visibleSectionCount = [
-    payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
-      ? "Announcement Bar"
-      : null,
-    "Hero",
-    payload.features.showSpecials ? "Daily Specials" : null,
-    "Featured Menu",
-    "About",
-    payload.features.showGallery ? "Photo Gallery" : null,
-    payload.features.showTestimonials ? "Testimonials" : null,
-    "Contact",
-    payload.features.showMap ? "Map" : null,
-  ].filter(Boolean).length;
-  const pendingQueue = [
-    !featuredSpecial ? "Set a featured special" : null,
-    !payload.meta.announcementIsActive || !payload.meta.announcementBody.trim()
-      ? "Publish an announcement bar"
-      : null,
-    totalItems === 0 ? "Load menu items into the live system" : null,
-    payload.hours.length === 0 ? "Enter open hours" : null,
-    payload.galleryImages.length === 0 ? "Add gallery photos" : null,
-  ].filter(Boolean) as string[];
+
   const featuredSpecialLabel = featuredSpecial
     ? featuredSpecial.price === null
       ? featuredSpecial.title
       : `${featuredSpecial.title} ($${featuredSpecial.price.toFixed(2)})`
     : "No live special selected";
-  const activityFeed = buildActivityFeed({
-    announcementLive:
-      payload.meta.announcementIsActive && Boolean(payload.meta.announcementBody.trim()),
-    featuredSpecialLabel,
-    visibleSectionCount,
-    photoCount: payload.galleryImages.length,
-  });
+
+  const visibleSections = [
+    payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+      ? "Announcement"
+      : null,
+    "Hero",
+    payload.features.showSpecials ? "Specials" : null,
+    "Menu",
+    "About",
+    payload.features.showGallery ? "Gallery" : null,
+    payload.features.showTestimonials ? "Testimonials" : null,
+    "Contact",
+    payload.features.showMap ? "Map" : null,
+  ].filter(Boolean) as string[];
+
+  const featuredCount = payload.specials.filter((s) => s.isFeatured).length;
+
+  const activityItems = [
+    {
+      time: "Live",
+      event: "Site is published",
+      detail: `${visibleSections.length} homepage sections visible`,
+    },
+    {
+      time: "Active",
+      event: "Featured special",
+      detail: featuredSpecialLabel,
+    },
+    {
+      time: "Active",
+      event: `${totalItems} menu items`,
+      detail: `across ${payload.menuCategories.length} ${payload.menuCategories.length === 1 ? "category" : "categories"}`,
+    },
+    {
+      time: "Active",
+      event: `${payload.galleryImages.length} gallery photos`,
+      detail: "in photo library",
+    },
+    {
+      time: payload.meta.announcementIsActive && payload.meta.announcementBody.trim() ? "Live" : "Off",
+      event: "Announcement bar",
+      detail: payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+        ? payload.meta.announcementBody.slice(0, 48) + (payload.meta.announcementBody.length > 48 ? "…" : "")
+        : "No announcement is broadcasting",
+    },
+  ];
+
+  const todayHours = payload.hours[0] ?? null;
 
   return (
     <AdminShell
       activeKey="overview"
       brandName={payload.brand.businessName}
-      eyebrow="Control Terminal"
-      title="Control Terminal"
-      description="Run the restaurant website like an operating console. Check the live site first, then move into the one update that matters right now."
+      eyebrow="Overview"
+      title="Overview"
       previewHref="/"
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-rows-[auto_minmax(0,1fr)_auto]">
-        <section className="admin-panel overflow-hidden rounded-[1.5rem]">
-          <div className="flex flex-col gap-4 border-b border-white/[0.08] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-                {payload.brand.businessName} // Control Terminal
-              </p>
-              <p className="mt-2 text-sm leading-6 text-white/58">
-                Live publishing is active. The workspace below keeps the current site state, the
-                priority actions, and the supporting system details visible at the same time.
-              </p>
+      <div
+        className="animate-fade-in"
+        style={{
+          height: "100%",
+          display: "flex",
+          overflow: "hidden",
+          padding: "2px",
+          gap: "12px",
+        }}
+      >
+        {/* ── COL 1: System status + metrics ── */}
+        <div style={{ width: 260, minWidth: 260, display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Status panel */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.018)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 10,
+              overflow: "hidden",
+            }}
+          >
+            <div className="panel-header">
+              <span className="label-upper">System Status</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <Dot on={true} />
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: "#4ade80",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  All Live
+                </span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
-                Status: Live
-              </div>
-              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/65">
-                {pendingQueue.length} Changes Pending
-              </div>
+            <div style={{ padding: "4px 16px 8px" }}>
+              <SysRow label="Site Status" value="Published" on={true} />
+              <SysRow
+                label="Active Special"
+                value={featuredSpecial ? "1 running" : "None"}
+                on={!!featuredSpecial}
+              />
+              <SysRow
+                label="Open Today"
+                value={todayHours?.openText ?? (payload.hours.length === 0 ? "Not configured" : "See hours")}
+                on={payload.hours.length > 0}
+              />
+              <SysRow label="Gallery" value={`${payload.galleryImages.length} images`} />
+              <SysRow label="Menu Items" value={`${totalItems} items`} />
+              <SysRow label="Sections Live" value={`${visibleSections.length} visible`} />
             </div>
           </div>
-          <div className="grid gap-3 px-5 py-3 text-sm text-white/50 md:grid-cols-3">
-            <p>Primary special: {featuredSpecial ? featuredSpecial.title : "Not set"}</p>
-            <p>Hours summary: {payload.settings.quickInfoHoursLabel || "Not configured"}</p>
-            <p>Menu system: {payload.menuCategories.length} sections online</p>
+
+          {/* Metrics grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <MetricTile
+              label="Menu Items"
+              value={String(totalItems)}
+              sub={`across ${payload.menuCategories.length} sections`}
+              amber
+            />
+            <MetricTile
+              label="Featured"
+              value={String(featuredCount)}
+              sub="starred items"
+            />
+            <MetricTile
+              label="Gallery"
+              value={String(payload.galleryImages.length)}
+              sub="visible photos"
+            />
+            <MetricTile
+              label="Sections"
+              value={`${visibleSections.length}/9`}
+              sub="homepage live"
+              amber
+            />
           </div>
-        </section>
-
-        <div className="grid min-h-0 gap-4 xl:grid-cols-[minmax(340px,0.76fr)_minmax(420px,1.24fr)]">
-          <section className="admin-panel min-h-0 overflow-hidden rounded-[1.5rem]">
-            <div className="border-b border-white/[0.08] px-5 py-4">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-                Live Site Snapshot
-              </p>
-              <h2 className="mt-2 text-[1.45rem] font-semibold text-white">Current guest-facing output</h2>
-            </div>
-            <div className="grid h-full min-h-0 gap-3 p-4 lg:grid-rows-3">
-              <div className="rounded-[1.1rem] border border-white/[0.08] bg-black/25 p-4">
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
-                  Announcement
-                </p>
-                <p className="mt-3 text-sm leading-6 text-white/68">
-                  {payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
-                    ? payload.meta.announcementBody
-                    : "No announcement is currently being broadcast."}
-                </p>
-              </div>
-
-              <div className="rounded-[1.1rem] border border-white/[0.08] bg-black/25 p-4">
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
-                  Featured Special
-                </p>
-                {featuredSpecial ? (
-                  <>
-                    <p className="mt-3 text-xl font-semibold text-white">{featuredSpecial.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-white/62">
-                      {featuredSpecial.description}
-                    </p>
-                    <p className="mt-3 text-sm font-semibold text-[var(--color-primary)]">
-                      {featuredSpecial.price === null
-                        ? featuredSpecial.label
-                        : `${featuredSpecial.label} // $${featuredSpecial.price.toFixed(2)}`}
-                    </p>
-                  </>
-                ) : (
-                  <p className="mt-3 text-sm leading-6 text-white/62">
-                    No special is currently marked as the live focus item.
-                  </p>
-                )}
-              </div>
-
-              <div className="rounded-[1.1rem] border border-white/[0.08] bg-black/25 p-4">
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
-                  Hours Summary
-                </p>
-                <p className="mt-3 text-base font-semibold text-white">
-                  {payload.settings.quickInfoHoursLabel || "Quick hours label not configured"}
-                </p>
-                <div className="mt-3 space-y-1 text-sm text-white/58">
-                  {payload.hours.slice(0, 3).map((row) => (
-                    <p key={row.dayLabel}>
-                      {row.dayLabel}: {row.openText}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="admin-panel min-h-0 overflow-hidden rounded-[1.5rem]">
-            <div className="border-b border-white/[0.08] px-5 py-4">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-                Primary Control
-              </p>
-              <h2 className="mt-2 text-[1.6rem] font-semibold text-white">
-                Choose the next live change.
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-                These are the highest-frequency publishing actions. Each panel is a direct entry
-                point into the edit surface.
-              </p>
-            </div>
-
-            <div className="grid gap-3 p-4 lg:grid-cols-3">
-              <Link
-                href="/admin/specials"
-                className="admin-panel admin-panel-hover rounded-[1.15rem] border-white/[0.08] bg-white/[0.03] p-4"
-              >
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Priority 01
-                </p>
-                <h3 className="mt-3 text-lg font-semibold text-white">Edit Today&apos;s Special</h3>
-                <p className="mt-2 text-sm leading-6 text-white/56">
-                  Swap the headline item, adjust status, and control what guests notice first.
-                </p>
-              </Link>
-
-              <Link
-                href="/admin/hours"
-                className="admin-panel admin-panel-hover rounded-[1.15rem] border-white/[0.08] bg-white/[0.03] p-4"
-              >
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Priority 02
-                </p>
-                <h3 className="mt-3 text-lg font-semibold text-white">Update Hours</h3>
-                <p className="mt-2 text-sm leading-6 text-white/56">
-                  Change open times, quick-hours copy, and the weekly operating read.
-                </p>
-              </Link>
-
-              <Link
-                href="/admin/menu"
-                className="admin-panel admin-panel-hover rounded-[1.15rem] border-white/[0.08] bg-white/[0.03] p-4"
-              >
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Priority 03
-                </p>
-                <h3 className="mt-3 text-lg font-semibold text-white">Open Menu Manager</h3>
-                <p className="mt-2 text-sm leading-6 text-white/56">
-                  Move into the menu console for category edits, item pricing, and visibility.
-                </p>
-              </Link>
-            </div>
-
-            <div className="grid gap-3 border-t border-white/[0.08] px-4 py-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[1.1rem] border border-white/[0.08] bg-black/25 p-4">
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
-                  Attention Queue
-                </p>
-                <div className="mt-3 space-y-2 text-sm text-white/62">
-                  {pendingQueue.length > 0 ? (
-                    pendingQueue.map((entry) => <p key={entry}>- {entry}</p>)
-                  ) : (
-                    <p>- No pending operational gaps detected in the main publishing lanes.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-[1.1rem] border border-white/[0.08] bg-black/25 p-4">
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
-                  Fast Access
-                </p>
-                <div className="mt-3 space-y-2 text-sm text-white/62">
-                  <Link href="/admin/branding" className="block transition hover:text-white">
-                    Open brand identity system
-                  </Link>
-                  <Link href="/admin/homepage" className="block transition hover:text-white">
-                    Adjust homepage visibility
-                  </Link>
-                  <a
-                    href="/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block transition hover:text-white"
-                  >
-                    Preview live website
-                  </a>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="admin-panel rounded-[1.5rem]">
-            <div className="border-b border-white/[0.08] px-5 py-4">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-                System Metrics
-              </p>
+        {/* ── COL 2: Primary actions + activity ── */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Command actions */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.018)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 10,
+              overflow: "hidden",
+            }}
+          >
+            <div className="panel-header">
+              <span className="label-upper">Command Actions</span>
+              <span
+                style={{
+                  fontSize: 9,
+                  color: "#35353e",
+                  fontWeight: 600,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Quick Edit
+              </span>
             </div>
-            <div className="grid gap-3 px-5 py-4 md:grid-cols-4">
-              <div>
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-                  Menu
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{payload.menuCategories.length}</p>
-                <p className="mt-1 text-sm text-white/52">{totalItems} items in circulation</p>
-              </div>
-              <div>
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-                  Specials
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{payload.specials.length}</p>
-                <p className="mt-1 text-sm text-white/52">Special offers configured</p>
-              </div>
-              <div>
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-                  Photos
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{payload.galleryImages.length}</p>
-                <p className="mt-1 text-sm text-white/52">Gallery assets live</p>
-              </div>
-              <div>
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-                  Sections
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">{visibleSectionCount}</p>
-                <p className="mt-1 text-sm text-white/52">Homepage modules visible</p>
-              </div>
+            <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
+              <ActionTile
+                label="Update Today's Special"
+                desc="Change the featured dish customers see right now"
+                href="/admin/specials"
+                icon={Sparkle}
+              />
+              <ActionTile
+                label="Edit Menu & Prices"
+                desc="Manage sections, items, descriptions, pricing"
+                href="/admin/menu"
+                icon={ForkKnife}
+              />
+              <ActionTile
+                label="Change Hours"
+                desc="Update business hours and quick-hours summary"
+                href="/admin/hours"
+                icon={Clock}
+              />
+              <ActionTile
+                label="Post Announcement"
+                desc="Update the top banner — closures, promos, reminders"
+                href="/admin/homepage"
+                icon={House}
+              />
             </div>
-          </section>
+          </div>
 
-          <section className="admin-panel rounded-[1.5rem]">
-            <div className="border-b border-white/[0.08] px-5 py-4">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-primary)]">
-                Activity Feed
-              </p>
+          {/* Activity log */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              background: "rgba(255,255,255,0.018)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 10,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div className="panel-header">
+              <span className="label-upper">Live State</span>
+              <ChartLine size={12} style={{ color: "#35353e" }} />
             </div>
-            <div className="space-y-3 px-5 py-4 text-sm text-white/62">
-              {activityFeed.map((entry) => (
-                <p key={entry}>- {entry}</p>
+            <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
+              {activityItems.map((item, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    padding: "10px 16px",
+                    borderBottom:
+                      i < activityItems.length - 1
+                        ? "1px solid rgba(255,255,255,0.04)"
+                        : "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: "#3a3a42",
+                      whiteSpace: "nowrap",
+                      paddingTop: 1,
+                      width: 46,
+                    }}
+                  >
+                    {item.time}
+                  </span>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: "#9896a0", margin: 0 }}>
+                      {item.event}
+                    </p>
+                    <p style={{ fontSize: 11, color: "#3e3e46", marginTop: 2 }}>{item.detail}</p>
+                  </div>
+                </div>
               ))}
             </div>
-          </section>
+          </div>
+        </div>
+
+        {/* ── COL 3: Live snapshot ── */}
+        <div
+          style={{
+            width: 262,
+            minWidth: 262,
+            background: "rgba(255,255,255,0.018)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 10,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div className="panel-header">
+            <span className="label-upper">Live Snapshot</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <Broadcast size={11} style={{ color: "#4ade80" }} />
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: "#4ade80",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Live
+              </span>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+            {/* Announcement */}
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+                  ? "rgba(217,119,6,0.07)"
+                  : "rgba(255,255,255,0.022)",
+                border: payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+                  ? "1px solid rgba(217,119,6,0.16)"
+                  : "1px solid rgba(255,255,255,0.065)",
+                marginBottom: 8,
+              }}
+            >
+              <span
+                className="label-upper"
+                style={
+                  payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+                    ? { color: "rgba(217,119,6,0.65)" }
+                    : {}
+                }
+              >
+                Announcement
+              </span>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#c9c7c0", marginTop: 5 }}>
+                {payload.meta.announcementIsActive && payload.meta.announcementBody.trim()
+                  ? payload.meta.announcementBody
+                  : "No announcement broadcasting"}
+              </p>
+            </div>
+
+            {/* Today's Special */}
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.022)",
+                border: "1px solid rgba(255,255,255,0.065)",
+                marginBottom: 8,
+              }}
+            >
+              <span className="label-upper">Today&apos;s Special</span>
+              {featuredSpecial ? (
+                <>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#e2e0d8",
+                      marginTop: 5,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {featuredSpecial.title}
+                  </p>
+                  {featuredSpecial.description && (
+                    <p style={{ fontSize: 11, color: "#5a5a64", marginTop: 3 }}>
+                      {featuredSpecial.description}
+                    </p>
+                  )}
+                  {featuredSpecial.price !== null && (
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#d97706", marginTop: 7 }}>
+                      ${featuredSpecial.price.toFixed(2)}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p style={{ fontSize: 12, color: "#5a5a64", marginTop: 5 }}>
+                  No special is currently featured
+                </p>
+              )}
+            </div>
+
+            {/* Hours */}
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.022)",
+                border: "1px solid rgba(255,255,255,0.065)",
+                marginBottom: 8,
+              }}
+            >
+              <span className="label-upper">Hours</span>
+              {payload.hours.length > 0 ? (
+                payload.hours.slice(0, 3).map((h) => (
+                  <p key={h.dayLabel} style={{ fontSize: 11, color: "#7a7a84", marginTop: 5 }}>
+                    {h.dayLabel} · {h.openText}
+                  </p>
+                ))
+              ) : (
+                <p style={{ fontSize: 11, color: "#5a5a64", marginTop: 5 }}>Not configured</p>
+              )}
+            </div>
+
+            {/* Visible sections */}
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.022)",
+                border: "1px solid rgba(255,255,255,0.065)",
+              }}
+            >
+              <span className="label-upper">Visible Sections</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
+                {visibleSections.map((s) => (
+                  <span
+                    key={s}
+                    style={{
+                      fontSize: 10,
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      background: "rgba(217,119,6,0.08)",
+                      color: "#c97a1a",
+                      border: "1px solid rgba(217,119,6,0.14)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </AdminShell>
