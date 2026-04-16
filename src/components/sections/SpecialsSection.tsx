@@ -16,17 +16,17 @@ export function SpecialsSection({
   }
 
   return (
-    <section className="border-b border-[var(--color-border)] bg-[var(--color-highlight)] px-4 py-16 sm:px-6 lg:px-8">
+    <section className="border-b border-[var(--color-section-dark-alt)] bg-[var(--color-section-dark-alt)] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="bg-[var(--color-card)]">
+        <Card className="border-[var(--color-section-dark-alt)] bg-[var(--color-section-dark)] text-[var(--color-section-dark-text)]">
           <CardContent className="p-8 md:p-10">
-            <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--brand-primary)]">
+            <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-accent)]">
               Today&apos;s Special
             </p>
-            <h2 className="mt-5 font-heading text-4xl text-[var(--color-foreground)] md:text-5xl">
+            <h2 className="mt-5 font-heading text-4xl text-[var(--color-section-dark-text)] md:text-5xl">
               {featured.title}
             </h2>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--color-foreground)]/72">
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--color-section-dark-text)] opacity-80">
               {featured.description}
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">

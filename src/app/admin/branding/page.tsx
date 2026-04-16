@@ -5,7 +5,6 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import {
   AdminCard,
   HiddenField,
-  PreviewLink,
 } from "@/components/admin/FormPrimitives";
 import { getAdminSitePayload } from "@/lib/queries";
 
@@ -53,9 +52,6 @@ export default async function AdminBrandingPage({ searchParams }: AdminPageProps
               themeTokens: payload.brand.themeTokens,
             }}
           />
-          <div className="flex flex-wrap gap-3">
-            <PreviewLink href="/" label="Preview Website" />
-          </div>
         </form>
       </AdminCard>
     </AdminShell>

@@ -94,6 +94,11 @@ export function buildThemeCssVars(
     "--color-accent-text": tokens.accentText,
     "--color-border": tokens.border,
     "--color-highlight": tokens.highlight,
+    "--color-section-dark": tokens.sectionDark ?? tokens.announcementBg,
+    "--color-section-dark-alt":
+      tokens.sectionDarkAlt ?? tokens.sectionDark ?? tokens.announcementBg,
+    "--color-section-dark-text":
+      tokens.sectionDarkText ?? tokens.announcementText,
     "--color-announcement-bg": tokens.announcementBg,
     "--color-announcement-text": tokens.announcementText,
     "--color-button-secondary-bg": tokens.buttonSecondaryBg,
@@ -164,6 +169,13 @@ export function themeTokensFromLegacyFields(
       legacy.highlightSectionColor,
       preset.colors.highlight,
     ),
+    sectionDark: preset.colors.sectionDark ?? preset.colors.announcementBg,
+    sectionDarkAlt:
+      preset.colors.sectionDarkAlt ??
+      preset.colors.sectionDark ??
+      preset.colors.announcementBg,
+    sectionDarkText:
+      preset.colors.sectionDarkText ?? preset.colors.announcementText,
     announcementBg: normalizeColor(
       legacy.announcementBackgroundColor,
       preset.colors.announcementBg,
@@ -216,6 +228,9 @@ export function parseThemeTokens(value: unknown): Partial<ThemeTokens> | null {
     "accentText",
     "border",
     "highlight",
+    "sectionDark",
+    "sectionDarkAlt",
+    "sectionDarkText",
     "announcementBg",
     "announcementText",
     "buttonSecondaryBg",

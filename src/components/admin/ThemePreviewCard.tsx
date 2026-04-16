@@ -62,14 +62,14 @@ export function ThemePreviewCard({
           </div>
         </div>
 
-        <div className="bg-[var(--color-background)] px-5 py-6">
+        <div className="bg-[var(--color-section-dark-alt)] px-5 py-6">
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
                 Hometown Dining
               </p>
               <h4
-                className="mt-3 text-4xl leading-none text-[var(--color-text)]"
+                className="mt-3 text-4xl leading-none text-[var(--color-section-dark-text)]"
                 style={{
                   fontFamily: `'${preset.fonts.heading}', ${preset.fonts.headingFallback}`,
                 }}
@@ -77,7 +77,7 @@ export function ThemePreviewCard({
                 Fresh meals that feel right for the neighborhood.
               </h4>
               <p
-                className="mt-4 max-w-xl text-sm leading-6 text-[var(--color-muted-text)]"
+                className="mt-4 max-w-xl text-sm leading-6 text-[var(--color-section-dark-text)] opacity-80"
                 style={{
                   fontFamily: `'${preset.fonts.body}', ${preset.fonts.bodyFallback}`,
                 }}
@@ -86,19 +86,19 @@ export function ThemePreviewCard({
               </p>
             </div>
 
-            <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
+            <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-section-dark)] p-5 text-[var(--color-section-dark-text)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">
                 Today&apos;s Special
               </p>
               <p
-                className="mt-2 text-2xl text-[var(--color-text)]"
+                className="mt-2 text-2xl text-[var(--color-section-dark-text)]"
                 style={{
                   fontFamily: `'${preset.fonts.heading}', ${preset.fonts.headingFallback}`,
                 }}
               >
                 Country Fried Steak
               </p>
-              <p className="mt-2 text-sm text-[var(--color-muted-text)]">
+              <p className="mt-2 text-sm text-[var(--color-section-dark-text)]/80">
                 Served with mashed potatoes and gravy.
               </p>
               <div className="mt-4 inline-flex rounded-full bg-[var(--color-accent)] px-3 py-1 text-xs font-semibold text-[var(--color-accent-text)]">

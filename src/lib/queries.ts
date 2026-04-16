@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { seedSitePayload } from "@/lib/seed";
 import { getThemePresetById } from "@/lib/theme";
+import { isDeletedMenuSectionDescription } from "@/lib/menu-tombstones";
 import {
   parseThemeTokens,
   resolveTheme,
@@ -358,6 +359,12 @@ function mapMenu(
     return seedSitePayload.menuCategories;
   }
 
+  const deletedSeedSlugs = new Set(
+    categoryRows
+      .filter((category) => isDeletedMenuSectionDescription(category.description))
+      .map((category) => category.slug),
+  );
+
   const itemsByCategory = new Map<string, MenuItemRow[]>();
   for (const item of itemRows ?? []) {
     const existing = itemsByCategory.get(item.category_id) ?? [];
@@ -365,34 +372,37 @@ function mapMenu(
     itemsByCategory.set(item.category_id, existing);
   }
 
-  const liveCategories = categoryRows.map((category) => ({
-    id: category.id,
-    name: category.name,
-    slug: category.slug,
-    description: category.description ?? undefined,
-    serviceWindow: category.service_window ?? "all-day",
-    isActive: category.is_active,
-    sortOrder: category.sort_order,
-    items: (itemsByCategory.get(category.id) ?? [])
-      .sort((left, right) => left.sort_order - right.sort_order)
-      .map((item) => ({
-        id: item.id,
-        categoryId: item.category_id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        tags: item.tags ?? [],
-        isActive: item.is_active,
-        isSoldOut: item.is_sold_out,
-        isFeatured: item.is_featured,
-        sortOrder: item.sort_order,
-        optionGroups: [],
-      })),
-  }));
+  const liveCategories = categoryRows
+    .filter((category) => !isDeletedMenuSectionDescription(category.description))
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description ?? undefined,
+      serviceWindow: category.service_window ?? "all-day",
+      isActive: category.is_active,
+      sortOrder: category.sort_order,
+      items: (itemsByCategory.get(category.id) ?? [])
+        .sort((left, right) => left.sort_order - right.sort_order)
+        .map((item) => ({
+          id: item.id,
+          categoryId: item.category_id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          tags: item.tags ?? [],
+          isActive: item.is_active,
+          isSoldOut: item.is_sold_out,
+          isFeatured: item.is_featured,
+          sortOrder: item.sort_order,
+          optionGroups: [],
+        })),
+    }));
 
   const liveSlugs = new Set(liveCategories.map((category) => category.slug));
   const fallbackCategories = seedSitePayload.menuCategories.filter(
-    (category) => !liveSlugs.has(category.slug),
+    (category) =>
+      !liveSlugs.has(category.slug) && !deletedSeedSlugs.has(category.slug),
   );
 
   return [...liveCategories, ...fallbackCategories].sort(

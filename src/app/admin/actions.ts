@@ -8,6 +8,8 @@ import {
   themeTokensFromLegacyFields,
   themeTokensToLegacyFields,
 } from "@/lib/theme-utils";
+import { seedSitePayload } from "@/lib/seed";
+import { DELETED_MENU_SECTION_DESCRIPTION } from "@/lib/menu-tombstones";
 import { getAdminSitePayload } from "@/lib/queries";
 import { requireAdminAccess } from "@/lib/admin-auth";
 import { getSupabaseAdminClientOrThrow, isSupabaseConfigured } from "@/lib/supabase";
@@ -573,6 +575,62 @@ async function deleteRecord({
   if (result.error) {
     throw new Error(result.error.message);
   }
+}
+
+async function saveDeletedMenuSectionTombstone({
+  id,
+  name,
+  slug,
+  serviceWindow,
+  sortOrder,
+}: {
+  id: string | null;
+  name: string;
+  slug: string;
+  serviceWindow?: "breakfast" | "lunch" | "dinner" | "all-day";
+  sortOrder: number;
+}) {
+  const client = getSupabaseAdminClientOrThrow();
+
+  let existingId = id;
+
+  if (!existingId) {
+    const existingCategory = await client
+      .from("menu_categories")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (existingCategory.error) {
+      throw new Error(existingCategory.error.message);
+    }
+
+    existingId = existingCategory.data?.id ?? null;
+  }
+
+  if (existingId) {
+    const deleteItemsResult = await client
+      .from("menu_items")
+      .delete()
+      .eq("category_id", existingId);
+
+    if (deleteItemsResult.error) {
+      throw new Error(deleteItemsResult.error.message);
+    }
+  }
+
+  return saveRecordAndReturnId({
+    table: "menu_categories",
+    id: existingId,
+    values: {
+      name,
+      slug,
+      description: DELETED_MENU_SECTION_DESCRIPTION,
+      service_window: serviceWindow ?? "all-day",
+      is_active: false,
+      sort_order: sortOrder,
+    },
+  });
 }
 
 async function getBusinessSettingsBase() {
@@ -1259,9 +1317,30 @@ export async function saveCategoryAction(formData: FormData) {
       throw new Error("Menu section slug is required.");
     }
 
-    const resolvedCategoryId = id
+    let resolvedCategoryId = id
       ? (await resolveMenuCategoryId(id)).categoryId
       : null;
+
+    if (!resolvedCategoryId) {
+      const client = getSupabaseAdminClientOrThrow();
+      const existingCategoryResult = await client
+        .from("menu_categories")
+        .select("id, description")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (existingCategoryResult.error) {
+        throw new Error(existingCategoryResult.error.message);
+      }
+
+      if (
+        existingCategoryResult.data?.id &&
+        existingCategoryResult.data.description ===
+          DELETED_MENU_SECTION_DESCRIPTION
+      ) {
+        resolvedCategoryId = existingCategoryResult.data.id;
+      }
+    }
 
     const savedCategoryId = await saveRecordAndReturnId({
       table: "menu_categories",
@@ -1297,14 +1376,32 @@ export async function deleteCategoryAction(formData: FormData) {
     await getAdminClient(path);
 
     const id = readRequiredString(formData, "category_id", "Menu section");
+    const payload = await getAdminSitePayload();
+    const category = payload.menuCategories.find((entry) => entry.id === id);
 
-    if (!isUuid(id)) {
-      throw new Error(
-        "This section is still using starter data. Save it live before deleting it.",
-      );
+    if (!category) {
+      throw new Error("The selected menu section could not be found.");
     }
 
-    await deleteRecord({ table: "menu_categories", id });
+    const isSeedBacked = seedSitePayload.menuCategories.some(
+      (entry) => entry.slug === category.slug,
+    );
+
+    if (isSeedBacked) {
+      await saveDeletedMenuSectionTombstone({
+        id: isUuid(id) ? id : null,
+        name: category.name,
+        slug: category.slug,
+        serviceWindow: category.serviceWindow,
+        sortOrder: category.sortOrder,
+      });
+    } else {
+      if (!isUuid(id)) {
+        throw new Error("The selected menu section could not be found.");
+      }
+
+      await deleteRecord({ table: "menu_categories", id });
+    }
 
     revalidateRestaurantPaths();
     redirectWithState(path, { status: "Menu section deleted." });

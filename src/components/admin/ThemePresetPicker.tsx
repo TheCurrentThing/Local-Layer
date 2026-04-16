@@ -13,9 +13,9 @@ function ThemeSwatchStrip({ preset }: { preset: ThemePreset }) {
   const swatches = [
     preset.colors.background,
     preset.colors.surface,
+    preset.colors.highlight,
     preset.colors.primary,
     preset.colors.accent,
-    preset.colors.text,
   ];
 
   return (

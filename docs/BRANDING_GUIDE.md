@@ -109,7 +109,18 @@ Fields:
 - `accentColor`
 
 These are turned into CSS variables by `buildBrandCssVariables()` and applied in `src/app/layout.tsx`.
+## Change Theme Presets
 
+Update:
+
+- `src/lib/theme.ts`
+
+These presets are surfaced in the Branding admin interface at `/admin/branding` through `ThemePresetPicker`.
+
+Notes:
+
+- New entries added to `THEME_PRESETS` appear automatically in the branding theme selector.
+- This is the place to add new restaurant color and font palettes for clients.
 ## Change Fonts
 
 Update:

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;500;600;700&family=Sora:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,6 +15,9 @@
   --color-accent-text: #3e2c1f;
   --color-border: #dccfc2;
   --color-highlight: #f1e3b8;
+  --color-section-dark: #a14a33;
+  --color-section-dark-alt: #8d3f2c;
+  --color-section-dark-text: #fff8f0;
   --color-announcement-bg: #f3e7d3;
   --color-announcement-text: #a14a33;
   --color-button-secondary-bg: #fff4ea;

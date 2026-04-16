@@ -10,6 +10,9 @@ export type ThemeTokens = {
   accentText: string;
   border: string;
   highlight: string;
+  sectionDark?: string;
+  sectionDarkAlt?: string;
+  sectionDarkText?: string;
   announcementBg: string;
   announcementText: string;
   buttonSecondaryBg: string;
@@ -24,6 +27,22 @@ export type FontPack = {
   label: string;
 };
 
+export type SectionPattern = {
+  type: "none" | "noise" | "dots" | "checker" | "stripes" | "organic";
+  opacity: number;
+  scale?: number;
+};
+
+export type AccentPattern = {
+  type: "none" | "dots" | "checker" | "memphis" | "organic" | "stripes";
+  intensity?: "low" | "medium";
+};
+
+export type ThemePatterns = {
+  section?: SectionPattern;
+  accent?: AccentPattern;
+};
+
 export type ThemePreset = {
   id: string;
   name: string;
@@ -31,6 +50,7 @@ export type ThemePreset = {
   recommendedFor: string[];
   fonts: FontPack;
   colors: ThemeTokens;
+  patterns?: ThemePatterns;
 };
 
 export const FONT_PACKS: Record<string, FontPack> = {
@@ -48,34 +68,6 @@ export const FONT_PACKS: Record<string, FontPack> = {
     bodyFallback: "sans-serif",
     label: "Editorial Warm",
   },
-  modernCafe: {
-    heading: "DM Serif Display",
-    body: "Inter",
-    headingFallback: "serif",
-    bodyFallback: "sans-serif",
-    label: "Modern Cafe",
-  },
-  coastalRefined: {
-    heading: "Libre Baskerville",
-    body: "Inter",
-    headingFallback: "serif",
-    bodyFallback: "sans-serif",
-    label: "Coastal Refined",
-  },
-  softBakery: {
-    heading: "DM Serif Display",
-    body: "Source Sans 3",
-    headingFallback: "serif",
-    bodyFallback: "sans-serif",
-    label: "Soft Bakery",
-  },
-  tavernClassic: {
-    heading: "Playfair Display",
-    body: "Source Sans 3",
-    headingFallback: "serif",
-    bodyFallback: "sans-serif",
-    label: "Tavern Classic",
-  },
 };
 
 export const THEME_PRESETS: ThemePreset[] = [
@@ -86,6 +78,17 @@ export const THEME_PRESETS: ThemePreset[] = [
       "Warm cream, burgundy, and gold with a hometown diner feel.",
     recommendedFor: ["diners", "breakfast spots", "family restaurants"],
     fonts: FONT_PACKS.classicSerif,
+    patterns: {
+      section: {
+        type: "checker",
+        opacity: 0.06,
+        scale: 0.8,
+      },
+      accent: {
+        type: "checker",
+        intensity: "low",
+      },
+    },
     colors: {
       background: "#F6EFE6",
       surface: "#FFF8F0",
@@ -110,6 +113,15 @@ export const THEME_PRESETS: ThemePreset[] = [
     shortDescription: "Moody espresso tones with cozy premium contrast.",
     recommendedFor: ["coffee shops", "kava bars", "modern cafes"],
     fonts: FONT_PACKS.editorialWarm,
+    patterns: {
+      section: {
+        type: "noise",
+        opacity: 0.05,
+      },
+      accent: {
+        type: "none",
+      },
+    },
     colors: {
       background: "#1F1A17",
       surface: "#2A2421",
@@ -129,81 +141,6 @@ export const THEME_PRESETS: ThemePreset[] = [
     },
   },
   {
-    id: "fresh-cafe",
-    name: "Fresh Cafe",
-    shortDescription:
-      "Light, clean, organic tones with a healthy modern feel.",
-    recommendedFor: ["health cafes", "juice bars", "smoothie shops"],
-    fonts: FONT_PACKS.modernCafe,
-    colors: {
-      background: "#F7F9F6",
-      surface: "#FFFFFF",
-      surfaceAlt: "#EEF4EE",
-      text: "#2E3A32",
-      mutedText: "#67786C",
-      primary: "#6FA67A",
-      primaryText: "#FFFFFF",
-      accent: "#DCEFE0",
-      accentText: "#304436",
-      border: "#D4E3D7",
-      highlight: "#EAF5EC",
-      announcementBg: "#EAF5EC",
-      announcementText: "#36553D",
-      buttonSecondaryBg: "#EFF7F0",
-      buttonSecondaryText: "#36553D",
-    },
-  },
-  {
-    id: "coastal-seafood",
-    name: "Coastal Seafood",
-    shortDescription:
-      "Cool blue, sand, and clean neutrals for a coastal table vibe.",
-    recommendedFor: ["seafood", "coastal restaurants", "light lunch spots"],
-    fonts: FONT_PACKS.coastalRefined,
-    colors: {
-      background: "#F4F7F9",
-      surface: "#FFFFFF",
-      surfaceAlt: "#EAF0F3",
-      text: "#24323A",
-      mutedText: "#5F717C",
-      primary: "#3A6F8F",
-      primaryText: "#FFFFFF",
-      accent: "#E6D6B8",
-      accentText: "#3D3125",
-      border: "#D7E2E8",
-      highlight: "#EAF2F7",
-      announcementBg: "#EAF2F7",
-      announcementText: "#2F607D",
-      buttonSecondaryBg: "#F0F5F8",
-      buttonSecondaryText: "#2F607D",
-    },
-  },
-  {
-    id: "dark-tavern",
-    name: "Dark Tavern",
-    shortDescription:
-      "Deep charcoal, burgundy, and brass for a richer night-time mood.",
-    recommendedFor: ["taverns", "pubs", "steakhouses", "bars"],
-    fonts: FONT_PACKS.tavernClassic,
-    colors: {
-      background: "#121212",
-      surface: "#1E1E1E",
-      surfaceAlt: "#262626",
-      text: "#EDEDED",
-      mutedText: "#B6B6B6",
-      primary: "#8C3A3A",
-      primaryText: "#FFFFFF",
-      accent: "#C9A46C",
-      accentText: "#22180D",
-      border: "#343434",
-      highlight: "#211A1A",
-      announcementBg: "#211A1A",
-      announcementText: "#D8B37A",
-      buttonSecondaryBg: "#262626",
-      buttonSecondaryText: "#EDEDED",
-    },
-  },
-  {
     id: "sunlit-brunch",
     name: "Sunlit Brunch",
     shortDescription:
@@ -215,6 +152,17 @@ export const THEME_PRESETS: ThemePreset[] = [
       headingFallback: "sans-serif",
       bodyFallback: "sans-serif",
       label: "Bright Modern Sans",
+    },
+    patterns: {
+      section: {
+        type: "dots",
+        opacity: 0.08,
+        scale: 1.2,
+      },
+      accent: {
+        type: "dots",
+        intensity: "low",
+      },
     },
     colors: {
       background: "#FFFDF7",
@@ -235,37 +183,6 @@ export const THEME_PRESETS: ThemePreset[] = [
     },
   },
   {
-    id: "rustic-kitchen",
-    name: "Rustic Kitchen",
-    shortDescription:
-      "Earthy olive, brown, and cream for a handmade farm-table feel.",
-    recommendedFor: ["farm-to-table", "rustic kitchens", "comfort food spots"],
-    fonts: {
-      heading: "Merriweather",
-      body: "Inter",
-      headingFallback: "serif",
-      bodyFallback: "sans-serif",
-      label: "Rustic Editorial",
-    },
-    colors: {
-      background: "#F4F1EC",
-      surface: "#FFFDF8",
-      surfaceAlt: "#EAE3D8",
-      text: "#2C2C2C",
-      mutedText: "#6E675E",
-      primary: "#7A4E2D",
-      primaryText: "#FFFFFF",
-      accent: "#A3B18A",
-      accentText: "#2F3A28",
-      border: "#D8D0C4",
-      highlight: "#E6E0D4",
-      announcementBg: "#E6E0D4",
-      announcementText: "#6C4428",
-      buttonSecondaryBg: "#F1ECE3",
-      buttonSecondaryText: "#6C4428",
-    },
-  },
-  {
     id: "neon-street",
     name: "Neon Street",
     shortDescription:
@@ -282,6 +199,17 @@ export const THEME_PRESETS: ThemePreset[] = [
       headingFallback: "sans-serif",
       bodyFallback: "sans-serif",
       label: "Bold Street",
+    },
+    patterns: {
+      section: {
+        type: "stripes",
+        opacity: 0.07,
+        scale: 1,
+      },
+      accent: {
+        type: "memphis",
+        intensity: "medium",
+      },
     },
     colors: {
       background: "#0F0F0F",
@@ -302,39 +230,236 @@ export const THEME_PRESETS: ThemePreset[] = [
     },
   },
   {
-    id: "minimal-mono",
-    name: "Minimal Mono",
+    id: "wild-herb",
+    name: "Wild Herb",
     shortDescription:
-      "Clean monochrome contrast for a sharp, modern, design-forward look.",
+      "Muted sage, olive gold, and clay red for an earthy, handcrafted food brand.",
     recommendedFor: [
-      "modern cafes",
-      "minimal brands",
-      "upscale counters",
-      "design-led concepts",
+      "farm-to-table",
+      "rustic cafes",
+      "wellness kitchens",
+      "artisan food spots",
     ],
     fonts: {
-      heading: "Inter Tight",
+      heading: "Merriweather",
+      body: "Inter",
+      headingFallback: "serif",
+      bodyFallback: "sans-serif",
+      label: "Rustic Editorial",
+    },
+    patterns: {
+      section: {
+        type: "organic",
+        opacity: 0.07,
+      },
+      accent: {
+        type: "organic",
+        intensity: "low",
+      },
+    },
+    colors: {
+      background: "#F4F1EA",
+      surface: "#FFFDF8",
+      surfaceAlt: "#E7E1D7",
+      text: "#2E2926",
+      mutedText: "#6E655F",
+      primary: "#942911",
+      primaryText: "#FFFFFF",
+      accent: "#94B9AF",
+      accentText: "#1E302C",
+      border: "#D5CDC0",
+      highlight: "#9D8420",
+      announcementBg: "#593837",
+      announcementText: "#F3E8D8",
+      buttonSecondaryBg: "#EEF4F1",
+      buttonSecondaryText: "#35514A",
+    },
+  },
+  {
+    id: "coastal-breeze",
+    name: "Coastal Breeze",
+    shortDescription:
+      "Fresh ocean blues with deep evergreen and vibrant tangerine accents.",
+    recommendedFor: [
+      "seafood spots",
+      "cafes",
+      "modern diners",
+      "fresh food brands",
+    ],
+    fonts: {
+      heading: "Sora",
       body: "Inter",
       headingFallback: "sans-serif",
       bodyFallback: "sans-serif",
-      label: "Minimal Modern",
+      label: "Clean Modern",
+    },
+    patterns: {
+      section: {
+        type: "dots",
+        opacity: 0.05,
+        scale: 0.9,
+      },
+      accent: {
+        type: "stripes",
+        intensity: "low",
+      },
     },
     colors: {
-      background: "#FFFFFF",
-      surface: "#FAFAFA",
-      surfaceAlt: "#F1F1F1",
-      text: "#111111",
-      mutedText: "#666666",
-      primary: "#111111",
+      background: "#F4FAFB",
+      surface: "#FFFFFF",
+      surfaceAlt: "#E6F2F5",
+      text: "#1C2B2E",
+      mutedText: "#5F7A80",
+      primary: "#D84727",
       primaryText: "#FFFFFF",
-      accent: "#D9D9D9",
-      accentText: "#111111",
-      border: "#E5E5E5",
-      highlight: "#F3F3F3",
-      announcementBg: "#F3F3F3",
-      announcementText: "#111111",
-      buttonSecondaryBg: "#FFFFFF",
-      buttonSecondaryText: "#111111",
+      accent: "#5EB1BF",
+      accentText: "#0E2A2F",
+      border: "#D6E3E6",
+      highlight: "#EF7B45",
+      announcementBg: "#042A2B",
+      announcementText: "#EAF6F7",
+      buttonSecondaryBg: "#EAF6F7",
+      buttonSecondaryText: "#042A2B",
+    },
+  },
+  {
+    id: "garden-bistro",
+    name: "Garden Bistro",
+    shortDescription:
+      "Soft almond and custard tones with plum depth, tea green freshness, and a cool twilight accent.",
+    recommendedFor: [
+      "cafes",
+      "bistros",
+      "brunch spots",
+      "casual dining",
+    ],
+    fonts: {
+      heading: "Lora",
+      body: "Inter",
+      headingFallback: "serif",
+      bodyFallback: "sans-serif",
+      label: "Soft Editorial",
+    },
+    patterns: {
+      section: {
+        type: "noise",
+        opacity: 0.03,
+      },
+      accent: {
+        type: "organic",
+        intensity: "low",
+      },
+    },
+    colors: {
+      background: "#FAF6EC",
+      surface: "#FFFFFF",
+      surfaceAlt: "#F1EDE2",
+      text: "#2F2B28",
+      mutedText: "#6F665F",
+      primary: "#E08E45",
+      primaryText: "#FFFFFF",
+      accent: "#BDF7B7",
+      accentText: "#1F2E1F",
+      border: "#DED7C8",
+      highlight: "#F8F4A6",
+      announcementBg: "#6B2737",
+      announcementText: "#F7E8EA",
+      buttonSecondaryBg: "#EEF6EE",
+      buttonSecondaryText: "#2F4F3F",
+    },
+  },
+  {
+    id: "ember-teal",
+    name: "Ember & Teal",
+    shortDescription:
+      "Bold flame orange with cool teal contrast, grounded by soft neutrals and deep charcoal.",
+    recommendedFor: [
+      "modern restaurants",
+      "burger spots",
+      "fusion kitchens",
+      "urban cafes",
+    ],
+    fonts: {
+      heading: "Sora",
+      body: "Inter",
+      headingFallback: "sans-serif",
+      bodyFallback: "sans-serif",
+      label: "Modern Contrast",
+    },
+    patterns: {
+      section: {
+        type: "stripes",
+        opacity: 0.06,
+      },
+      accent: {
+        type: "checker",
+        intensity: "low",
+      },
+    },
+    colors: {
+      background: "#F7F3EA",
+      surface: "#FFFFFF",
+      surfaceAlt: "#EFE7DA",
+      text: "#1F1F1F",
+      mutedText: "#6B6258",
+      primary: "#FF4000",
+      primaryText: "#FFFFFF",
+      accent: "#50B2C0",
+      accentText: "#0F2A2E",
+      border: "#DED6C8",
+      highlight: "#FAAA8D",
+      announcementBg: "#201E1F",
+      announcementText: "#F7F3EA",
+      buttonSecondaryBg: "#E8F4F6",
+      buttonSecondaryText: "#201E1F",
+    },
+  },
+  {
+    id: "quiet-reserve",
+    name: "Quiet Reserve",
+    shortDescription:
+      "Muted slate and sage tones with deep bordeaux and black for a refined, understated experience.",
+    recommendedFor: [
+      "fine dining",
+      "wine bars",
+      "upscale cafes",
+      "modern restaurants",
+    ],
+    fonts: {
+      heading: "Playfair Display",
+      body: "Inter",
+      headingFallback: "serif",
+      bodyFallback: "sans-serif",
+      label: "Refined Editorial",
+    },
+    patterns: {
+      section: {
+        type: "noise",
+        opacity: 0.04,
+      },
+      accent: {
+        type: "none",
+      },
+    },
+    colors: {
+      background: "#F4F2EF",
+      surface: "#FFFFFF",
+      surfaceAlt: "#E7E3DD",
+      text: "#2A2A2A",
+      mutedText: "#6E6A65",
+      primary: "#5A2328",
+      primaryText: "#FFFFFF",
+      accent: "#7A9B76",
+      accentText: "#1E2A1F",
+      border: "#D3CEC7",
+      highlight: "#C8BFC7",
+      sectionDark: "#1A1415",
+      sectionDarkAlt: "#231B1D",
+      sectionDarkText: "#F4F2EF",
+      announcementBg: "#090302",
+      announcementText: "#F4F2EF",
+      buttonSecondaryBg: "#EDEBE7",
+      buttonSecondaryText: "#2A2A2A",
     },
   },
 ];

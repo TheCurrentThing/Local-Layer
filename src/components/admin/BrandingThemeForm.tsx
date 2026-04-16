@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SaveButton } from "@/components/admin/FormPrimitives";
+import { BrandingPreviewLink } from "@/components/admin/BrandingPreviewLink";
 import { ThemeCustomizer } from "@/components/admin/ThemeCustomizer";
 import { ThemePresetPicker } from "@/components/admin/ThemePresetPicker";
 import { ThemePreviewCard } from "@/components/admin/ThemePreviewCard";
@@ -174,6 +175,13 @@ export function BrandingThemeForm({
 
           <div className="flex flex-wrap gap-3">
             <SaveButton label="Save Theme" />
+            <BrandingPreviewLink
+              businessName={businessName}
+              tagline={tagline}
+              themeMode={themeMode}
+              themePresetId={selectedPreset.id}
+              themeTokens={resolvedTheme.resolvedColors}
+            />
             <button
               type="button"
               onClick={resetToPreset}
