@@ -3,9 +3,11 @@ import type { BrandConfig, FeatureFlags } from "@/types/site";
 export function StickyMobileBar({
   brand,
   features,
+  basePath = "",
 }: {
   brand: BrandConfig;
   features: FeatureFlags;
+  basePath?: string;
 }) {
   if (!features.showStickyMobileBar) {
     return null;
@@ -21,7 +23,7 @@ export function StickyMobileBar({
           Call
         </a>
         <a
-          href="/menu"
+          href={`${basePath}/menu`}
           className="flex min-h-[56px] items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-button-secondary-bg)] text-sm font-semibold text-[var(--color-button-secondary-text)]"
         >
           Menu

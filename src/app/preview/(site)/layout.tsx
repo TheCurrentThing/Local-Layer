@@ -15,11 +15,11 @@ export default async function PreviewSiteLayout({
     <div className="min-h-screen pb-24 md:pb-0">
       <div className="sticky top-0 z-50">
         <AnnouncementBar settings={payload.settings} />
-        <SiteHeader brand={payload.brand} />
+        <SiteHeader brand={payload.brand} basePath="/preview" />
       </div>
       <main>{children}</main>
       <SiteFooter brand={payload.brand} hours={payload.hours} />
-      <StickyMobileBar brand={payload.brand} features={payload.features} />
+      <StickyMobileBar brand={payload.brand} features={payload.features} basePath="/preview" />
     </div>
   );
 }

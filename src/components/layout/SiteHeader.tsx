@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import type { BrandConfig } from "@/types/site";
 
-export function SiteHeader({ brand }: { brand: BrandConfig }) {
+export function SiteHeader({ brand, basePath = "" }: { brand: BrandConfig; basePath?: string }) {
   return (
     <header className="border-b border-[var(--color-border)] bg-[var(--color-header-background)] backdrop-blur">
       <div className="relative mx-auto hidden max-w-7xl px-4 sm:px-6 md:block lg:px-8">
         <div className="pointer-events-none absolute left-8 top-1/2 z-20 -translate-y-1/2 xl:left-10">
-          <a href="/" className="pointer-events-auto block">
+          <a href={basePath || "/"} className="pointer-events-auto block">
             {brand.logoUrl ? (
               <img
                 src={brand.logoUrl}
@@ -26,16 +26,16 @@ export function SiteHeader({ brand }: { brand: BrandConfig }) {
             <div className="w-[124px] shrink-0 lg:w-[136px]" />
 
             <nav className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-7">
-              <a href="/" className="text-sm font-medium text-[var(--color-foreground)]">
+              <a href={basePath || "/"} className="text-sm font-medium text-[var(--color-foreground)]">
                 Home
               </a>
-              <a href="/menu" className="text-sm font-medium text-[var(--color-foreground)]">
+              <a href={`${basePath}/menu`} className="text-sm font-medium text-[var(--color-foreground)]">
                 Menu
               </a>
-              <a href="/about" className="text-sm font-medium text-[var(--color-foreground)]">
+              <a href={`${basePath}/about`} className="text-sm font-medium text-[var(--color-foreground)]">
                 About
               </a>
-              <a href="/contact" className="text-sm font-medium text-[var(--color-foreground)]">
+              <a href={`${basePath}/contact`} className="text-sm font-medium text-[var(--color-foreground)]">
                 Contact
               </a>
             </nav>
@@ -45,7 +45,7 @@ export function SiteHeader({ brand }: { brand: BrandConfig }) {
                 <a href={`tel:${brand.phone.replace(/[^\d]/g, "")}`}>Call</a>
               </Button>
               <Button asChild size="sm">
-                <a href="/menu">View Menu</a>
+                <a href={`${basePath}/menu`}>View Menu</a>
               </Button>
             </div>
           </div>
@@ -54,7 +54,7 @@ export function SiteHeader({ brand }: { brand: BrandConfig }) {
 
       <div className="space-y-4 border-b border-[var(--color-border)] px-4 py-4 md:hidden sm:px-6 lg:px-8">
         <div className="flex justify-start">
-          <a href="/" className="block">
+          <a href={basePath || "/"} className="block">
             <div className="px-2 py-1 text-center">
               {brand.logoUrl ? (
                 <img
@@ -73,16 +73,16 @@ export function SiteHeader({ brand }: { brand: BrandConfig }) {
 
         <div className="space-y-4">
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <a href="/" className="text-sm font-medium text-[var(--color-foreground)]">
+            <a href={basePath || "/"} className="text-sm font-medium text-[var(--color-foreground)]">
               Home
             </a>
-            <a href="/menu" className="text-sm font-medium text-[var(--color-foreground)]">
+            <a href={`${basePath}/menu`} className="text-sm font-medium text-[var(--color-foreground)]">
               Menu
             </a>
-            <a href="/about" className="text-sm font-medium text-[var(--color-foreground)]">
+            <a href={`${basePath}/about`} className="text-sm font-medium text-[var(--color-foreground)]">
               About
             </a>
-            <a href="/contact" className="text-sm font-medium text-[var(--color-foreground)]">
+            <a href={`${basePath}/contact`} className="text-sm font-medium text-[var(--color-foreground)]">
               Contact
             </a>
           </nav>
@@ -92,7 +92,7 @@ export function SiteHeader({ brand }: { brand: BrandConfig }) {
               <a href={`tel:${brand.phone.replace(/[^\d]/g, "")}`}>Call</a>
             </Button>
             <Button asChild size="sm">
-              <a href="/menu">View Menu</a>
+              <a href={`${basePath}/menu`}>View Menu</a>
             </Button>
           </div>
         </div>

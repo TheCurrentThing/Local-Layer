@@ -106,7 +106,7 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
       <LocalBusinessJsonLd brand={previewBrand} hours={payload.hours} />
       <div className="sticky top-0 z-50">
         <AnnouncementBar settings={payload.settings} />
-        <SiteHeader brand={previewBrand} />
+        <SiteHeader brand={previewBrand} basePath="/preview" />
       </div>
       <main>
         <HeroSection
@@ -154,7 +154,7 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
         />
       </main>
       <SiteFooter brand={previewBrand} hours={payload.hours} />
-      <StickyMobileBar brand={previewBrand} features={payload.features} />
+      <StickyMobileBar brand={previewBrand} features={payload.features} basePath="/preview" />
     </div>
   );
 }
