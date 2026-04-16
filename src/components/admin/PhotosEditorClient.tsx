@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import { saveGalleryImageAction, deleteGalleryImageAction } from "@/app/admin/actions";
 
 /* ─── icons ──────────────────────────────────────────────── */
@@ -57,6 +58,8 @@ export function PhotosEditorClient({
   images: GalleryImage[];
   businessName: string;
 }) {
+  const isMobile = useMobile();
+  const [mobileTab, setMobileTab] = useState<"library" | "edit">("library");
   const [images, setImages] = useState(initImages);
   const [draft, setDraft] = useState<DraftImage>(
     initImages.length > 0 ? toDraft(initImages[0]) : BLANK_DRAFT
@@ -75,6 +78,7 @@ export function PhotosEditorClient({
     setIsNew(false);
     setPhotoFile(null);
     setPreviewUrl(null);
+    if (isMobile) setMobileTab("edit");
   }
 
   function openNew() {
@@ -82,6 +86,7 @@ export function PhotosEditorClient({
     setIsNew(true);
     setPhotoFile(null);
     setPreviewUrl(null);
+    if (isMobile) setMobileTab("edit");
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -145,13 +150,40 @@ export function PhotosEditorClient({
   const displaySrc = previewUrl ?? (draft.src || null);
   const selectedId = draft.id;
 
+  const TABS = [
+    { id: "library" as const, label: "Library" },
+    { id: "edit" as const, label: "Edit" },
+  ];
+  const panelStyle = (tab: typeof mobileTab) =>
+    isMobile
+      ? { flex: 1, minHeight: 0, width: "100%", display: mobileTab === tab ? "flex" : "none", flexDirection: "column" as const }
+      : {};
+
   return (
     <div
       className="animate-fade-in"
-      style={{ height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }}
+      style={isMobile
+        ? { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          {TABS.map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setMobileTab(tab.id)} style={{
+              flex: 1, padding: "12px 4px", border: "none", background: "transparent",
+              borderBottom: mobileTab === tab.id ? "2px solid #d97706" : "2px solid transparent",
+              color: mobileTab === tab.id ? "#d97706" : "#4b4b54",
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── LEFT: thumbnail grid ── */}
-      <div style={{ width: 210, minWidth: 210, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: isMobile ? undefined : 210, minWidth: isMobile ? undefined : 210, ...panelStyle("library"), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <span className="label-upper">Library</span>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -204,7 +236,7 @@ export function PhotosEditorClient({
       </div>
 
       {/* ── CENTER: editor ── */}
-      <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minWidth: isMobile ? undefined : 0, ...panelStyle("edit"), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: draft.isActive ? "#4ade80" : "#2e2e35" }} />
@@ -354,8 +386,8 @@ export function PhotosEditorClient({
         </div>
       </div>
 
-      {/* ── RIGHT: stats ── */}
-      <div style={{ width: 200, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* ── RIGHT: stats (desktop only) ── */}
+      {!isMobile && <div style={{ width: 200, minWidth: 200, display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Counts */}
         <div style={{ background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
           <div className="panel-header">
@@ -396,7 +428,7 @@ export function PhotosEditorClient({
             ))}
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

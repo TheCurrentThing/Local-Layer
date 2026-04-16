@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import { saveHourAction, deleteHourAction, saveQuickHoursAction } from "@/app/admin/actions";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
@@ -74,6 +75,8 @@ export function HoursEditorClient({
   hours: HourEntry[];
   quickHoursLabel: string;
 }) {
+  const isMobile = useMobile();
+  const [mobileTab, setMobileTab] = useState<"days" | "edit" | "week">("edit");
   const [week, setWeek] = useState<WeekState>(() => initWeek(hours));
   const [selected, setSelected] = useState<DayName>("Monday");
   const [isPending, startTransition] = useTransition();
@@ -107,22 +110,46 @@ export function HoursEditorClient({
     });
   }
 
+  const TABS = [
+    { id: "days" as const, label: "Days" },
+    { id: "edit" as const, label: "Edit" },
+    { id: "week" as const, label: "Week" },
+  ];
+
+  const panelStyle = (tab: typeof mobileTab) =>
+    isMobile
+      ? { flex: 1, minHeight: 0, width: "100%", display: mobileTab === tab ? "flex" : "none", flexDirection: "column" as const }
+      : {};
+
   return (
     <div
       className="animate-fade-in"
-      style={{
-        height: "100%",
-        display: "flex",
-        overflow: "hidden",
-        padding: "2px",
-        gap: "12px",
-      }}
+      style={isMobile
+        ? { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          {TABS.map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setMobileTab(tab.id)} style={{
+              flex: 1, padding: "12px 4px", border: "none", background: "transparent",
+              borderBottom: mobileTab === tab.id ? "2px solid #d97706" : "2px solid transparent",
+              color: mobileTab === tab.id ? "#d97706" : "#4b4b54",
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── LEFT: Day selector ── */}
       <div
         style={{
-          width: 184,
-          minWidth: 184,
+          width: isMobile ? undefined : 184,
+          minWidth: isMobile ? undefined : 184,
+          ...panelStyle("days"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,
@@ -154,7 +181,7 @@ export function HoursEditorClient({
               <button
                 key={day}
                 type="button"
-                onClick={() => setSelected(day)}
+                onClick={() => { setSelected(day); if (isMobile) setMobileTab("edit"); }}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -226,7 +253,8 @@ export function HoursEditorClient({
       <div
         style={{
           flex: 1,
-          minWidth: 0,
+          minWidth: isMobile ? undefined : 0,
+          ...panelStyle("edit"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,
@@ -428,8 +456,9 @@ export function HoursEditorClient({
       {/* ── RIGHT: Week overview + quick summary ── */}
       <div
         style={{
-          width: 212,
-          minWidth: 212,
+          width: isMobile ? undefined : 212,
+          minWidth: isMobile ? undefined : 212,
+          ...panelStyle("week"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,

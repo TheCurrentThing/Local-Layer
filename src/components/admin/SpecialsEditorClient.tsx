@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import {
   saveSpecialAction,
   deleteSpecialAction,
@@ -117,6 +118,8 @@ export function SpecialsEditorClient({
   specials: Special[];
   announcement: { title: string; body: string; isActive: boolean; sortOrder: number };
 }) {
+  const isMobile = useMobile();
+  const [mobileTab, setMobileTab] = useState<"list" | "edit" | "announce">("edit");
   const [specials, setSpecials] = useState(initSpecials);
   const [draft, setDraft] = useState<DraftSpecial>(
     initSpecials.length > 0 ? toDraft(initSpecials[0]) : BLANK_DRAFT
@@ -136,6 +139,7 @@ export function SpecialsEditorClient({
   function selectSpecial(s: Special) {
     setDraft(toDraft(s));
     setIsNew(false);
+    if (isMobile) setMobileTab("edit");
   }
 
   function openNew() {
@@ -206,13 +210,43 @@ export function SpecialsEditorClient({
     });
   }
 
+  const TABS = [
+    { id: "list" as const, label: "Specials" },
+    { id: "edit" as const, label: "Edit" },
+    { id: "announce" as const, label: "Announce" },
+  ];
+
+  const panelStyle = (tab: typeof mobileTab) =>
+    isMobile
+      ? { flex: 1, minHeight: 0, width: "100%", display: mobileTab === tab ? "flex" : "none", flexDirection: "column" as const }
+      : {};
+
   return (
     <div
       className="animate-fade-in"
-      style={{ height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }}
+      style={isMobile
+        ? { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
+      {/* ── Mobile tabs ── */}
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          {TABS.map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setMobileTab(tab.id)} style={{
+              flex: 1, padding: "12px 4px", border: "none", background: "transparent",
+              borderBottom: mobileTab === tab.id ? "2px solid #d97706" : "2px solid transparent",
+              color: mobileTab === tab.id ? "#d97706" : "#4b4b54",
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── LEFT: specials list ── */}
-      <div style={{ width: 196, minWidth: 196, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: isMobile ? undefined : 196, minWidth: isMobile ? undefined : 196, ...panelStyle("list"), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <span className="label-upper">Specials</span>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -256,7 +290,7 @@ export function SpecialsEditorClient({
       </div>
 
       {/* ── CENTER: editor ── */}
-      <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minWidth: isMobile ? undefined : 0, ...panelStyle("edit"), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: draft.isActive ? "#4ade80" : "#2e2e35" }} />
@@ -375,7 +409,7 @@ export function SpecialsEditorClient({
       </div>
 
       {/* ── RIGHT: live preview + announcement ── */}
-      <div style={{ width: 236, minWidth: 236, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ width: isMobile ? undefined : 236, minWidth: isMobile ? undefined : 236, display: "flex", flexDirection: "column", gap: 10, ...(isMobile ? panelStyle("announce") : {}) }}>
 
         {/* Live special preview */}
         <div style={{ background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import {
   saveAnnouncementAction,
   saveHomepageContentAction,
@@ -85,6 +86,8 @@ export function HomepageEditorClient({
   features: FlagsState;
   galleryImages: GalleryImage[];
 }) {
+  const isMobile = useMobile();
+  const [mobileTab, setMobileTab] = useState<"sections" | "edit">("edit");
   const [announcement, setAnnouncement] = useState(initAnnouncement);
   const [hero, setHero] = useState(initHero);
   const [supporting, setSupporting] = useState(initSupporting);
@@ -174,10 +177,31 @@ export function HomepageEditorClient({
   return (
     <div
       className="animate-fade-in"
-      style={{ height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }}
+      style={isMobile
+        ? { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
+      {/* ── Mobile tabs ── */}
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          {[{ id: "sections" as const, label: "Sections" }, { id: "edit" as const, label: "Edit" }].map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setMobileTab(tab.id)} style={{
+              flex: 1, padding: "12px 4px", border: "none", background: "transparent",
+              borderBottom: mobileTab === tab.id ? "2px solid #d97706" : "2px solid transparent",
+              color: mobileTab === tab.id ? "#d97706" : "#4b4b54",
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── LEFT: Section list ── */}
-      <div style={{ width: 224, minWidth: 224, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{
+        width: isMobile ? undefined : 224, minWidth: isMobile ? undefined : 224,
+        ...(isMobile ? { flex: 1, minHeight: 0, display: mobileTab === "sections" ? "flex" : "none", flexDirection: "column" as const } : {}), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <span className="label-upper">Homepage Sections</span>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#4ade80", letterSpacing: "0.1em", textTransform: "uppercase" }}>
@@ -188,7 +212,7 @@ export function HomepageEditorClient({
           {sections.map((s) => (
             <div
               key={s.id}
-              onClick={() => setSelected(s.id)}
+              onClick={() => { setSelected(s.id); if (isMobile) setMobileTab("edit"); }}
               style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 10px", borderRadius: 8, marginBottom: 2, background: selected === s.id ? "rgba(217,119,6,0.09)" : "transparent", border: selected === s.id ? "1px solid rgba(217,119,6,0.2)" : "1px solid transparent", cursor: "pointer", transition: "background 0.12s" }}
               onMouseEnter={(e) => { if (selected !== s.id) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
               onMouseLeave={(e) => { if (selected !== s.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -212,7 +236,8 @@ export function HomepageEditorClient({
       </div>
 
       {/* ── CENTER: Editor ── */}
-      <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minWidth: isMobile ? undefined : 0,
+        ...(isMobile ? { minHeight: 0, display: mobileTab === "edit" ? "flex" : "none", flexDirection: "column" as const } : {}), background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <div className="panel-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -496,8 +521,8 @@ export function HomepageEditorClient({
         </div>
       </div>
 
-      {/* ── RIGHT: Visibility map ── */}
-      <div style={{ width: 188, minWidth: 188, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      {/* ── RIGHT: Visibility map (desktop only) ── */}
+      {!isMobile && <div style={{ width: 188, minWidth: 188, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div className="panel-header">
           <span className="label-upper">Visibility Map</span>
         </div>
@@ -505,7 +530,7 @@ export function HomepageEditorClient({
           {sections.map((s) => (
             <div
               key={s.id}
-              onClick={() => setSelected(s.id)}
+              onClick={() => { setSelected(s.id); if (isMobile) setMobileTab("edit"); }}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 6px", borderBottom: "1px solid rgba(255,255,255,0.035)", cursor: "pointer" }}
             >
               <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: s.live ? "#4ade80" : "#252530", flexShrink: 0 }} />
@@ -522,7 +547,7 @@ export function HomepageEditorClient({
             <p style={{ fontSize: 10, color: "#3a3a42", margin: 0 }}>live on site</p>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

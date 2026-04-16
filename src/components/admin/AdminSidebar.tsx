@@ -50,7 +50,9 @@ export function AdminSidebar({
     .toUpperCase();
 
   return (
+    <>
     <aside
+      className="admin-sidebar"
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       style={{
@@ -289,5 +291,48 @@ export function AdminSidebar({
         </Link>
       </div>
     </aside>
+
+    {/* ── Mobile bottom nav (CSS shows this on screens < 768px) ── */}
+    <nav className="admin-bottom-nav">
+      {[...NAV, { href: "/admin/settings", Icon: Gear, label: "Settings" }].map(({ href, Icon, label }) => {
+        const active = isActive(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 3,
+              minWidth: 52,
+              flex: 1,
+              padding: "6px 4px",
+              textDecoration: "none",
+              borderTop: active ? "2px solid #d97706" : "2px solid transparent",
+              background: active ? "rgba(217,119,6,0.06)" : "transparent",
+            }}
+          >
+            <Icon
+              size={18}
+              weight={active ? "bold" : "regular"}
+              style={{ color: active ? "#d97706" : "#55555e" }}
+            />
+            <span style={{
+              fontSize: 8,
+              fontWeight: active ? 700 : 500,
+              color: active ? "#d97706" : "#55555e",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}>
+              {label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+    </>
   );
 }

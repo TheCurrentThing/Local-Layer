@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import {
   saveCategoryAction,
   saveMenuItemAction,
@@ -93,6 +94,8 @@ export function MenuEditorClient({
 }: {
   categories: MenuCategory[];
 }) {
+  const isMobile = useMobile();
+  const [mobileTab, setMobileTab] = useState<"cats" | "items" | "edit">("cats");
   const [activeCatId, setActiveCatId] = useState<string>(
     categories[0]?.id ?? ""
   );
@@ -113,10 +116,12 @@ export function MenuEditorClient({
       isActive: item.isActive,
       isSoldOut: item.isSoldOut,
     });
+    if (isMobile) setMobileTab("edit");
   }
 
   function openNew() {
     setDraft(emptyDraft());
+    if (isMobile) setMobileTab("edit");
   }
 
   function close() {
@@ -160,22 +165,46 @@ export function MenuEditorClient({
     setShowNewCat(false);
   }
 
+  const TABS = [
+    { id: "cats" as const, label: "Menu" },
+    { id: "items" as const, label: "Items" },
+    { id: "edit" as const, label: "Edit" },
+  ];
+
+  const panelStyle = (tab: typeof mobileTab) =>
+    isMobile
+      ? { flex: 1, minHeight: 0, width: "100%", display: mobileTab === tab ? "flex" : "none", flexDirection: "column" as const }
+      : {};
+
   return (
     <div
       className="animate-fade-in"
-      style={{
-        height: "100%",
-        display: "flex",
-        overflow: "hidden",
-        padding: "2px",
-        gap: "12px",
-      }}
+      style={isMobile
+        ? { height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
+      {isMobile && (
+        <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+          {TABS.map((tab) => (
+            <button key={tab.id} type="button" onClick={() => setMobileTab(tab.id)} style={{
+              flex: 1, padding: "12px 4px", border: "none", background: "transparent",
+              borderBottom: mobileTab === tab.id ? "2px solid #d97706" : "2px solid transparent",
+              color: mobileTab === tab.id ? "#d97706" : "#4b4b54",
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── LEFT: Categories ── */}
       <div
         style={{
-          width: 172,
-          minWidth: 172,
+          width: isMobile ? undefined : 172,
+          minWidth: isMobile ? undefined : 172,
+          ...panelStyle("cats"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,
@@ -198,6 +227,7 @@ export function MenuEditorClient({
                 onClick={() => {
                   setActiveCatId(cat.id);
                   setDraft(null);
+                  if (isMobile) setMobileTab("items");
                 }}
                 style={{
                   display: "flex",
@@ -295,7 +325,8 @@ export function MenuEditorClient({
       <div
         style={{
           flex: 1,
-          minWidth: 0,
+          minWidth: isMobile ? undefined : 0,
+          ...panelStyle("items"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,
@@ -430,8 +461,9 @@ export function MenuEditorClient({
       {/* ── RIGHT: Item editor ── */}
       <div
         style={{
-          width: 256,
-          minWidth: 256,
+          width: isMobile ? undefined : 256,
+          minWidth: isMobile ? undefined : 256,
+          ...panelStyle("edit"),
           background: "rgba(255,255,255,0.018)",
           border: "1px solid rgba(255,255,255,0.06)",
           borderRadius: 10,

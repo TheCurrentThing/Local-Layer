@@ -66,7 +66,7 @@ export function AdminShell({
             flexDirection: "column",
             padding: "12px",
           }}
-          className={contentClassName}
+          className={["admin-main", contentClassName].filter(Boolean).join(" ")}
         >
           {children}
         </main>

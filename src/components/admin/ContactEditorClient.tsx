@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useMobile } from "@/hooks/useMobile";
 import { saveContactInfoAction } from "@/app/admin/actions";
 
 /* ─── icon SVGs ─────────────────────────────────────────── */
@@ -202,6 +203,7 @@ export function ContactEditorClient({
   tiktok: string;
   googleBusiness: string;
 }) {
+  const isMobile = useMobile();
   const [phone, setPhone] = useState(initPhone);
   const [email, setEmail] = useState(initEmail);
   const [line1, setLine1] = useState(initLine1);
@@ -243,7 +245,10 @@ export function ContactEditorClient({
   return (
     <div
       className="animate-fade-in"
-      style={{ height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }}
+      style={isMobile
+        ? { display: "flex", flexDirection: "column", overflow: "auto", padding: "2px", gap: "12px" }
+        : { height: "100%", display: "flex", overflow: "hidden", padding: "2px", gap: "12px" }
+      }
     >
       {/* ── LEFT: Contact fields ── */}
       <div style={{ flex: 1, minWidth: 0, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -328,7 +333,7 @@ export function ContactEditorClient({
       </div>
 
       {/* ── RIGHT: Map + live card ── */}
-      <div style={{ width: 272, minWidth: 272, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ width: isMobile ? "100%" : 272, minWidth: isMobile ? undefined : 272, display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Map panel */}
         <div style={{ flex: 1, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <div className="panel-header">
