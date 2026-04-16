@@ -658,3 +658,59 @@ export async function getGalleryImages(): Promise<GalleryImage[]> {
   const payload = await getSitePayload();
   return payload.galleryImages.sort((left, right) => left.sortOrder - right.sortOrder);
 }
+
+export type PageViewStats = {
+  today: number;
+  week: number;
+  topPages: { path: string; count: number }[];
+};
+
+export async function getPageViewStats(): Promise<PageViewStats | null> {
+  noStore();
+
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const client = createSupabaseAdminClient();
+  if (!client) {
+    return null;
+  }
+
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [todayResult, weekResult, pathsResult] = await Promise.all([
+    client
+      .from("page_views")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", todayStart.toISOString()),
+    client
+      .from("page_views")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo.toISOString()),
+    client
+      .from("page_views")
+      .select("path")
+      .gte("created_at", sevenDaysAgo.toISOString())
+      .limit(2000),
+  ]);
+
+  const pathCounts = new Map<string, number>();
+  for (const row of pathsResult.data ?? []) {
+    pathCounts.set(row.path, (pathCounts.get(row.path) ?? 0) + 1);
+  }
+
+  const topPages = Array.from(pathCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([path, count]) => ({ path, count }));
+
+  return {
+    today: todayResult.count ?? 0,
+    week: weekResult.count ?? 0,
+    topPages,
+  };
+}

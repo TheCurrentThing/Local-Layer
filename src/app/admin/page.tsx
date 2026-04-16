@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { getAdminSitePayload } from "@/lib/queries";
+import { getAdminSitePayload, getPageViewStats } from "@/lib/queries";
 
 /* ─── inline primitives (server-safe, no hooks) ───────────────── */
 
@@ -128,7 +128,10 @@ function ActionTile({
 /* ─── page ──────────────────────────────────────────────────────── */
 
 export default async function AdminDashboardPage() {
-  const payload = await getAdminSitePayload();
+  const [payload, traffic] = await Promise.all([
+    getAdminSitePayload(),
+    getPageViewStats(),
+  ]);
 
   const totalItems = payload.menuCategories.reduce(
     (count, cat) => count + cat.items.length,
@@ -190,6 +193,13 @@ export default async function AdminDashboardPage() {
         ? payload.meta.announcementBody.slice(0, 48) + (payload.meta.announcementBody.length > 48 ? "…" : "")
         : "No announcement is broadcasting",
     },
+    ...(traffic !== null
+      ? traffic.topPages.map((page) => ({
+          time: String(page.count),
+          event: page.path,
+          detail: "views in last 7 days",
+        }))
+      : []),
   ];
 
   const todayHours = payload.hours[0] ?? null;
@@ -283,6 +293,21 @@ export default async function AdminDashboardPage() {
               sub="homepage live"
               amber
             />
+            {traffic !== null && (
+              <>
+                <MetricTile
+                  label="Views Today"
+                  value={String(traffic.today)}
+                  sub="page visits"
+                />
+                <MetricTile
+                  label="Views (7d)"
+                  value={String(traffic.week)}
+                  sub="this week"
+                  amber
+                />
+              </>
+            )}
           </div>
         </div>
 
@@ -354,7 +379,14 @@ export default async function AdminDashboardPage() {
           >
             <div className="panel-header">
               <span className="label-upper">Live State</span>
-              <ChartLine size={12} style={{ color: "#35353e" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                {traffic !== null && (
+                  <span style={{ fontSize: 10, color: "#55555e", fontWeight: 500 }}>
+                    {traffic.week} visits this week
+                  </span>
+                )}
+                <ChartLine size={12} style={{ color: "#35353e" }} />
+              </div>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
               {activityItems.map((item, i) => (
