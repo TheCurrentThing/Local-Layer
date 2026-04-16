@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { saveCategoryAction } from "@/app/admin/actions";
+import { TrashSimple } from "@phosphor-icons/react/dist/ssr";
+import { deleteCategoryAction, saveCategoryAction } from "@/app/admin/actions";
 import {
   AdminCheckbox,
   AdminInput,
@@ -86,38 +87,56 @@ export function MenuSectionList({
             const isSelected = category.id === selectedCategoryId;
 
             return (
-              <Link
+              <div
                 key={category.id}
-                href={`/admin/menu?category=${category.id}`}
                 className={[
-                  "admin-panel admin-panel-hover block rounded-[1rem] px-4 py-3",
+                  "admin-panel admin-panel-hover flex items-start rounded-[1rem]",
                   isSelected
                     ? "border-[var(--color-primary)] bg-[linear-gradient(180deg,rgba(181,84,61,0.16),rgba(181,84,61,0.05))]"
                     : "border-white/[0.08] bg-black/20",
                 ].join(" ")}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
-                      {category.slug || "category"}
-                    </p>
-                    <p className="mt-1 truncate font-semibold text-white">{category.name}</p>
-                    <p className="mt-1 text-xs text-white/55">
-                      {category.items.length} items // {getServiceWindowLabel(category.serviceWindow)}
-                    </p>
+                <Link
+                  href={`/admin/menu?category=${category.id}`}
+                  className="flex-1 px-4 py-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-white/34">
+                        {category.slug || "category"}
+                      </p>
+                      <p className="mt-1 truncate font-semibold text-white">{category.name}</p>
+                      <p className="mt-1 text-xs text-white/55">
+                        {category.items.length} items // {getServiceWindowLabel(category.serviceWindow)}
+                      </p>
+                    </div>
+                    <span
+                      className={[
+                        "shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em]",
+                        category.isActive
+                          ? "bg-[color:rgba(33,115,70,0.16)] text-emerald-300"
+                          : "bg-white/[0.06] text-white/50",
+                      ].join(" ")}
+                    >
+                      {category.isActive ? "Live" : "Hidden"}
+                    </span>
                   </div>
-                  <span
-                    className={[
-                      "shrink-0 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em]",
-                      category.isActive
-                        ? "bg-[color:rgba(33,115,70,0.16)] text-emerald-300"
-                        : "bg-white/[0.06] text-white/50",
-                    ].join(" ")}
-                  >
-                    {category.isActive ? "Live" : "Hidden"}
-                  </span>
+                </Link>
+
+                <div className="flex shrink-0 items-center px-3 py-3">
+                  <form action={deleteCategoryAction}>
+                    <HiddenField name="redirect_to" value="/admin/menu" />
+                    <HiddenField name="category_id" value={category.id} />
+                    <button
+                      type="submit"
+                      title="Delete category"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-400/25 bg-red-500/10 text-red-300/60 transition hover:border-red-400/45 hover:bg-red-500/18 hover:text-red-200"
+                    >
+                      <TrashSimple size={13} />
+                    </button>
+                  </form>
                 </div>
-              </Link>
+              </div>
             );
           })
         ) : (
