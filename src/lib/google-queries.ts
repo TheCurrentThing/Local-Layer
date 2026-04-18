@@ -295,7 +295,7 @@ export async function markJobProcessing(jobId: string): Promise<void> {
 
 export async function markJobDone(
   jobId: string,
-  outcome: "success" | "failed",
+  outcome: "success" | "failed" | "pending",
   error?: string,
 ): Promise<void> {
   await db()

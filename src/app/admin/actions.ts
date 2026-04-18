@@ -1514,7 +1514,7 @@ export async function saveSpecialAction(formData: FormData) {
       },
     });
 
-    void queueSpecialPostIfEnabled(businessId, resolvedSpecialId, "upsert");
+    if (resolvedSpecialId) void queueSpecialPostIfEnabled(businessId, resolvedSpecialId, "upsert");
     revalidateSpecials();
     redirectWithState(path, { status: "Special saved." });
   } catch (error) {

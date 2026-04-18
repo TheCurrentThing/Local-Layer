@@ -4,6 +4,8 @@ import type { SitePayload } from "@/types/site";
 
 export const seedSitePayload: SitePayload = {
   brand: brandConfig,
+  kitType: "restaurant",
+  rendererType: "standard",
   features: {
     ...featureFlags,
     showBreakfastMenu: false,

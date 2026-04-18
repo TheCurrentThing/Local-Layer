@@ -21,6 +21,7 @@ import {
   SignOut,
   User,
   UserCircle,
+  type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { getKitModules } from "@/lib/kit-config";
 import { signOutAction } from "@/app/admin/auth-actions";
@@ -31,7 +32,7 @@ import type { PlanSlug, SubscriptionStatus } from "@/types/billing";
 
 type NavItem = {
   href: string;
-  Icon: React.ComponentType<{ size?: number; weight?: string; style?: React.CSSProperties }>;
+  Icon: PhosphorIcon;
   label: string;
   moduleKey?: keyof KitModules;
 };
@@ -128,7 +129,7 @@ export function AdminSidebar({
   brandName,
   kitType = "restaurant",
   userEmail,
-  planSlug = "free",
+  planSlug = "starter",
   planStatus = "active",
   items: _items,
   persistenceEnabled: _pe,

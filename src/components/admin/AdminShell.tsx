@@ -34,7 +34,7 @@ export async function AdminShell({
 }) {
   let kitType: KitType = "restaurant";
   let userEmail: string | null = null;
-  let planSlug: PlanSlug = "free";
+  let planSlug: PlanSlug = "starter";
   let planStatus: SubscriptionStatus = "active";
 
   try {

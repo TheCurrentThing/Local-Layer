@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     const kitFeatures = kitDef.features;
     const kitDefaults = kitDef.defaults;
 
-    const seedOps: Promise<unknown>[] = [
+    const seedOps: PromiseLike<unknown>[] = [
       client.from("business_settings").insert({
         business_id: business.id,
         business_name: name,

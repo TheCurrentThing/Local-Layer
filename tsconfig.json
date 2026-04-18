@@ -21,6 +21,7 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
+    "local-layer_main",
     "branchkit_live",
     "branch-kit.vercel.app_admin_1omdtw",
     "branch-kit.vercel.app_admin_1q3vwi",
