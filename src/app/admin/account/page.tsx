@@ -97,7 +97,7 @@ export default async function AdminAccountPage() {
   const businessId = await getCurrentAdminBusinessId();
   const user = await getAdminUser().catch(() => null);
   const subscription = await getBusinessSubscription(businessId);
-  const plan = getPlanConfig(subscription?.planSlug ?? "free");
+  const plan = getPlanConfig(subscription?.planSlug ?? "starter");
 
   const { brand, kitType, rendererType, businessSlug } = payload;
   const subdomainUrl = `${businessSlug}.locallayer.com`;
