@@ -12,6 +12,7 @@ export default async function AdminMenuPage() {
       eyebrow="Menu"
       title="Menu System"
       previewHref="/preview/menu"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}/menu` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <MenuEditorClient categories={payload.menuCategories} />

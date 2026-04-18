@@ -12,6 +12,7 @@ export default async function AdminHomepagePage() {
       eyebrow="Homepage"
       title="Homepage"
       previewHref="/preview"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <HomepageEditorClient

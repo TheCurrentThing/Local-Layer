@@ -20,6 +20,7 @@ export default async function AdminBrandingPage({ searchParams }: AdminPageProps
       title="Identity Terminal"
       description="Keep theme selection, live preview, and save controls visible at once. Choose a direction, inspect it in context, then commit only when the identity feels right."
       previewHref="/preview"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <AdminFeedback searchParams={searchParams} />

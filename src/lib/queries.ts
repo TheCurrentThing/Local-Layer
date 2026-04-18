@@ -1,3 +1,5 @@
+import "server-only";
+import { cache } from "react";
 import { unstable_noStore as noStore } from "next/cache";
 import { fontPackToFontStacks } from "@/lib/font-registry";
 import { seedSitePayload } from "@/lib/seed";
@@ -10,6 +12,12 @@ import {
   themeTokensToLegacyFields,
 } from "@/lib/theme-utils";
 import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase";
+import { getCurrentAdminBusinessId, getBusinessBySlug, type BusinessRow } from "@/lib/business";
+import { toKitType } from "@/lib/kit-config";
+import { toRendererType } from "@/lib/renderer-config";
+import { getBusinessEntitlements, resolveRendererType, hasEntitlement } from "@/lib/entitlements";
+import type { KitType } from "@/types/kit";
+import type { RendererType } from "@/types/renderer";
 import type {
   AboutPageContent,
   BrandConfig,
@@ -23,8 +31,11 @@ import type {
 } from "@/types/site";
 import type { BusinessSpecial, MenuCategory } from "@/types/menu";
 
+// ─── ROW TYPES ───────────────────────────────────────────────────────────────
+
 type BusinessSettingsRow = {
   id: string;
+  business_id: string;
   business_name: string;
   tagline: string;
   logo_url: string | null;
@@ -69,6 +80,7 @@ type BusinessSettingsRow = {
 
 type AnnouncementRow = {
   id: string;
+  business_id: string;
   title: string;
   body: string;
   is_active: boolean;
@@ -77,6 +89,7 @@ type AnnouncementRow = {
 
 type HomepageContentRow = {
   id: string;
+  business_id: string;
   hero_eyebrow: string;
   hero_headline: string;
   hero_subheadline: string;
@@ -99,6 +112,7 @@ type HomepageContentRow = {
 
 type BusinessHoursRow = {
   id: string;
+  business_id: string;
   day_label: string;
   open_text: string;
   sort_order: number;
@@ -107,6 +121,7 @@ type BusinessHoursRow = {
 
 type SpecialsRow = {
   id: string;
+  business_id: string;
   title: string;
   description: string;
   price: number | null;
@@ -118,6 +133,7 @@ type SpecialsRow = {
 
 type MenuCategoryRow = {
   id: string;
+  business_id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -128,6 +144,7 @@ type MenuCategoryRow = {
 
 type MenuItemRow = {
   id: string;
+  business_id: string;
   category_id: string;
   name: string;
   description: string;
@@ -141,6 +158,7 @@ type MenuItemRow = {
 
 type GalleryImageRow = {
   id: string;
+  business_id: string;
   src: string;
   alt: string;
   sort_order: number;
@@ -158,7 +176,10 @@ type SiteRows = {
   galleryRows: GalleryImageRow[];
 };
 
+// ─── ADMIN PAYLOAD TYPE ───────────────────────────────────────────────────────
+
 export interface AdminSitePayload extends SitePayload {
+  businessSlug: string;
   meta: {
     businessSettingsId: string | null;
     homepageContentId: string | null;
@@ -169,6 +190,8 @@ export interface AdminSitePayload extends SitePayload {
     announcementIsActive: boolean;
   };
 }
+
+// ─── ROW MAPPERS ─────────────────────────────────────────────────────────────
 
 function normalizeLogoAlignment(value: string | null | undefined): LogoAlignment {
   return value === "left" ? "left" : "center";
@@ -247,8 +270,7 @@ function mapBrand(settingsRow: BusinessSettingsRow | null): BrandConfig {
     primaryColor: settingsRow.primary_color ?? legacyColors.primaryColor,
     secondaryColor: settingsRow.secondary_color ?? legacyColors.secondaryColor,
     accentColor: settingsRow.accent_color ?? legacyColors.accentColor,
-    headingFont:
-      settingsRow.heading_font ?? fontStacks.heading,
+    headingFont: settingsRow.heading_font ?? fontStacks.heading,
     bodyFont: settingsRow.body_font ?? fontStacks.body,
   };
 }
@@ -496,15 +518,13 @@ function filterPayloadForPublic(payload: SitePayload): SitePayload {
   };
 }
 
-async function fetchSiteRows(): Promise<SiteRows | null> {
-  if (!isSupabaseConfigured()) {
-    return null;
-  }
+// ─── DATABASE FETCH ───────────────────────────────────────────────────────────
 
+// Cached per request — layout + page share one round trip for the same businessId
+const fetchSiteRowsCached = cache(async (businessId: string): Promise<SiteRows | null> => {
+  if (!isSupabaseConfigured()) return null;
   const client = createSupabaseAdminClient();
-  if (!client) {
-    return null;
-  }
+  if (!client) return null;
 
   const [
     settingsResult,
@@ -519,44 +539,52 @@ async function fetchSiteRows(): Promise<SiteRows | null> {
     client
       .from("business_settings")
       .select("*")
+      .eq("business_id", businessId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle<BusinessSettingsRow>(),
     client
       .from("announcements")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true })
       .returns<AnnouncementRow[]>(),
     client
       .from("homepage_content")
       .select("*")
+      .eq("business_id", businessId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle<HomepageContentRow>(),
     client
       .from("business_hours")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .returns<BusinessHoursRow[]>(),
     client
       .from("specials")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .returns<SpecialsRow[]>(),
     client
       .from("menu_categories")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .returns<MenuCategoryRow[]>(),
     client
       .from("menu_items")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .returns<MenuItemRow[]>(),
     client
       .from("gallery_images")
       .select("*")
+      .eq("business_id", businessId)
       .order("sort_order", { ascending: true })
       .returns<GalleryImageRow[]>(),
   ]);
@@ -571,12 +599,23 @@ async function fetchSiteRows(): Promise<SiteRows | null> {
     itemsRows: itemsResult.data ?? [],
     galleryRows: galleryResult.data ?? [],
   };
-}
+});
 
-async function loadPayload(): Promise<AdminSitePayload> {
+async function loadPayload(
+  businessId: string,
+  businessSlug: string,
+  kitType: KitType = "restaurant",
+  rendererType: RendererType = "standard",
+): Promise<AdminSitePayload> {
   noStore();
 
-  const rows = await fetchSiteRows();
+  // Resolve effective renderer type — downgrade if not entitled.
+  // getBusinessEntitlements is cached per request so this is a single DB query
+  // shared across the layout + page for the same business.
+  const entitlements = await getBusinessEntitlements(businessId);
+  const effectiveRendererType = resolveRendererType(rendererType, entitlements);
+
+  const rows = await fetchSiteRowsCached(businessId);
   const adminAnnouncement = rows
     ? pickAdminAnnouncement(rows.announcementsRows)
     : null;
@@ -584,7 +623,10 @@ async function loadPayload(): Promise<AdminSitePayload> {
     ? pickPublicAnnouncement(rows.announcementsRows)
     : null;
 
-  const payload: AdminSitePayload = {
+  return {
+    kitType,
+    rendererType: effectiveRendererType,
+    businessSlug,
     brand: mapBrand(rows?.settingsRow ?? null),
     features: mapFeatures(rows?.settingsRow ?? null),
     settings: mapSettings(
@@ -611,18 +653,68 @@ async function loadPayload(): Promise<AdminSitePayload> {
       announcementIsActive: adminAnnouncement?.is_active ?? true,
     },
   };
-
-  return payload;
 }
 
+// ─── PUBLIC EXPORTS ───────────────────────────────────────────────────────────
+
+// Cached per request — resolves the full admin business row (id + slug + name + kit_type)
+const fetchAdminBusinessCached = cache(async (): Promise<BusinessRow | null> => {
+  if (!isSupabaseConfigured()) return null;
+  const client = createSupabaseAdminClient();
+  if (!client) return null;
+
+  const businessId = await getCurrentAdminBusinessId();
+  const { data } = await client
+    .from("businesses")
+    .select("id, slug, name, is_active, site_status, kit_type, renderer_type")
+    .eq("id", businessId)
+    .maybeSingle<Omit<BusinessRow, "kit_type" | "renderer_type"> & { kit_type: string; renderer_type: string }>();
+  if (!data) return null;
+  return { ...data, kit_type: toKitType(data.kit_type), renderer_type: toRendererType(data.renderer_type) };
+});
+
+/**
+ * Load the full admin payload for the current business.
+ * Resolves business via LOCALLAYER_BUSINESS_ID env or first business in DB.
+ */
 export async function getAdminSitePayload(): Promise<AdminSitePayload> {
-  return loadPayload();
+  const businessId = await getCurrentAdminBusinessId();
+  const business = await fetchAdminBusinessCached();
+  return loadPayload(businessId, business?.slug ?? "", business?.kit_type ?? "restaurant", business?.renderer_type ?? "standard");
 }
 
+/**
+ * Load the public (filtered) payload for the current admin business.
+ * Used by /preview routes.
+ */
 export async function getSitePayload(): Promise<SitePayload> {
-  const payload = await loadPayload();
+  const businessId = await getCurrentAdminBusinessId();
+  const business = await fetchAdminBusinessCached();
+  const payload = await loadPayload(businessId, business?.slug ?? "", business?.kit_type ?? "restaurant", business?.renderer_type ?? "standard");
   return filterPayloadForPublic(payload);
 }
+
+/**
+ * PRIMARY PUBLIC ENTRY POINT.
+ * Resolves a business by slug and returns its fully filtered site payload.
+ * Returns null if the slug doesn't match any active business.
+ * Used by /[slug]/ routes.
+ */
+export async function getBusinessSitePayload(slug: string): Promise<SitePayload | null> {
+  const business = await getBusinessBySlug(slug);
+  if (!business) return null;
+
+  // Gate public rendering on site_live entitlement.
+  // Canceled subscriptions return an empty entitlement set → site returns 404.
+  // getBusinessEntitlements is cached per request so this costs no extra DB query.
+  const entitlements = await getBusinessEntitlements(business.id);
+  if (!hasEntitlement(entitlements, "site_live")) return null;
+
+  const payload = await loadPayload(business.id, business.slug, business.kit_type, business.renderer_type);
+  return filterPayloadForPublic(payload);
+}
+
+// ─── CONVENIENCE WRAPPERS ─────────────────────────────────────────────────────
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   const payload = await getSitePayload();
@@ -659,6 +751,8 @@ export async function getGalleryImages(): Promise<GalleryImage[]> {
   return payload.galleryImages.sort((left, right) => left.sortOrder - right.sortOrder);
 }
 
+// ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
 export type PageViewStats = {
   today: number;
   week: number;
@@ -677,6 +771,13 @@ export async function getPageViewStats(): Promise<PageViewStats | null> {
     return null;
   }
 
+  let businessId: string | null = null;
+  try {
+    businessId = await getCurrentAdminBusinessId();
+  } catch {
+    return null;
+  }
+
   const now = new Date();
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -686,14 +787,17 @@ export async function getPageViewStats(): Promise<PageViewStats | null> {
     client
       .from("page_views")
       .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
       .gte("created_at", todayStart.toISOString()),
     client
       .from("page_views")
       .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
       .gte("created_at", sevenDaysAgo.toISOString()),
     client
       .from("page_views")
       .select("path")
+      .eq("business_id", businessId)
       .gte("created_at", sevenDaysAgo.toISOString())
       .limit(2000),
   ]);

@@ -1,5 +1,7 @@
 import type { BusinessSpecial, MenuCategory } from "@/types/menu";
 import type { ThemeTokens } from "@/lib/theme";
+import type { KitType } from "@/types/kit";
+import type { RendererType } from "@/types/renderer";
 
 export interface SocialLinks {
   facebook?: string;
@@ -112,6 +114,8 @@ export interface Testimonial {
 }
 
 export interface SitePayload {
+  kitType: KitType;
+  rendererType: RendererType;
   brand: BrandConfig;
   features: FeatureFlags;
   settings: SiteSettings;

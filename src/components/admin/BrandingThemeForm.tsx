@@ -25,7 +25,7 @@ export function BrandingThemeForm({
     themeTokens: ThemeTokens;
   };
 }) {
-  // ── BranchKit state (preserved exactly) ──────────────────────────────────
+  // ── Local Layer state (preserved exactly) ──────────────────────────────────
   const initialPreset = getThemePresetById(initialBrand.themePresetId);
   const [businessName, setBusinessName] = useState(initialBrand.businessName);
   const [tagline, setTagline] = useState(initialBrand.tagline);

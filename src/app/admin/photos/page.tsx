@@ -12,6 +12,7 @@ export default async function AdminPhotosPage() {
       eyebrow="Photos"
       title="Photo Library"
       previewHref="/preview"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <PhotosEditorClient

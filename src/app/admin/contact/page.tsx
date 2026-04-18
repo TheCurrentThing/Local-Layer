@@ -12,6 +12,7 @@ export default async function AdminContactPage() {
       eyebrow="Contact"
       title="Contact"
       previewHref="/preview/contact"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}/contact` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <ContactEditorClient

@@ -1,10 +1,26 @@
-import { requireAdminAccess } from "@/lib/admin-auth";
+export const dynamic = "force-dynamic";
 
-export default async function AdminLayout({
+const themeScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('admin-theme');
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.setAttribute('data-admin-theme', t);
+    }
+  } catch(e) {}
+})();
+`;
+
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireAdminAccess();
-  return children;
+  // Auth enforced by middleware for all /admin/* routes (excluding /admin/login).
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      {children}
+    </>
+  );
 }

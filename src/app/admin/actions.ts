@@ -13,34 +13,59 @@ import { seedSitePayload } from "@/lib/seed";
 import { DELETED_MENU_SECTION_DESCRIPTION } from "@/lib/menu-tombstones";
 import { getAdminSitePayload } from "@/lib/queries";
 import { requireAdminAccess } from "@/lib/admin-auth";
+import { getCurrentAdminBusinessId } from "@/lib/business";
 import { getSupabaseAdminClientOrThrow, isSupabaseConfigured } from "@/lib/supabase";
+import { queueHoursSyncIfEnabled, queueSpecialPostIfEnabled } from "@/lib/google-sync";
 
-const PUBLIC_PATHS = ["/", "/menu", "/about", "/contact"];
 const BRAND_ASSET_BUCKET = "restaurant-assets";
 const BRAND_LOGO_FOLDER = "branding-logos";
 const HOMEPAGE_HERO_FOLDER = "homepage-hero";
 const GALLERY_IMAGE_FOLDER = "gallery-images";
-const ADMIN_INDEX_PATHS = [
-  "/admin",
-  "/admin/setup",
-  "/admin/branding",
-  "/admin/homepage",
-  "/admin/menu",
-  "/admin/specials",
-  "/admin/hours",
-  "/admin/photos",
-  "/admin/contact",
-  "/admin/settings",
-];
 
 function timestamp() {
   return new Date().toISOString();
 }
 
-function revalidateRestaurantPaths() {
-  for (const path of [...PUBLIC_PATHS, ...ADMIN_INDEX_PATHS]) {
-    revalidatePath(path);
-  }
+// Targeted revalidation helpers — each action only clears what it changed.
+// All admin and public routes are force-dynamic so route cache is not involved;
+// these calls clear Next.js Data Cache entries for any fetch-cached queries.
+function revalidateAdminSection(adminPath: string) {
+  revalidatePath(adminPath);
+  revalidatePath("/admin");
+}
+
+function revalidateBranding() {
+  // Brand affects all public pages via CSS vars; revalidate layout
+  revalidatePath("/admin/branding");
+  revalidatePath("/admin");
+}
+
+function revalidateHomepage() {
+  revalidateAdminSection("/admin/homepage");
+}
+
+function revalidateMenu() {
+  revalidateAdminSection("/admin/menu");
+}
+
+function revalidateSpecials() {
+  revalidateAdminSection("/admin/specials");
+}
+
+function revalidateHours() {
+  revalidateAdminSection("/admin/hours");
+}
+
+function revalidatePhotos() {
+  revalidateAdminSection("/admin/photos");
+}
+
+function revalidateContact() {
+  revalidateAdminSection("/admin/contact");
+}
+
+function revalidateSettings() {
+  revalidateAdminSection("/admin/settings");
 }
 
 function redirectWithState(
@@ -100,6 +125,8 @@ async function getAdminClient(path: string) {
   ensureConfigured(path);
   return getSupabaseAdminClientOrThrow();
 }
+
+// ─── FORM READERS ─────────────────────────────────────────────────────────────
 
 function readRequiredString(formData: FormData, key: string, label: string) {
   const value = formData.get(key);
@@ -194,7 +221,7 @@ function slugify(value: string) {
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "");
 }
 
 function isUuid(value: string | null | undefined) {
@@ -216,6 +243,27 @@ function sanitizeFileName(value: string) {
 
   return normalized || `logo-${Date.now()}`;
 }
+
+function readServiceWindow(formData: FormData) {
+  const value = readOptionalString(formData, "service_window");
+
+  if (!value) {
+    return "all-day";
+  }
+
+  if (
+    value === "breakfast" ||
+    value === "lunch" ||
+    value === "dinner" ||
+    value === "all-day"
+  ) {
+    return value;
+  }
+
+  throw new Error("Menu timing must be breakfast, lunch, dinner, or all day.");
+}
+
+// ─── FILE UPLOADS ─────────────────────────────────────────────────────────────
 
 async function ensureBrandAssetBucket() {
   const client = getSupabaseAdminClientOrThrow();
@@ -346,24 +394,7 @@ async function uploadHomepageHeroImageFile(file: File, businessName: string) {
   return data.publicUrl;
 }
 
-function readServiceWindow(formData: FormData) {
-  const value = readOptionalString(formData, "service_window");
-
-  if (!value) {
-    return "all-day";
-  }
-
-  if (
-    value === "breakfast" ||
-    value === "lunch" ||
-    value === "dinner" ||
-    value === "all-day"
-  ) {
-    return value;
-  }
-
-  throw new Error("Menu timing must be breakfast, lunch, dinner, or all day.");
-}
+// ─── GENERIC DB HELPERS ───────────────────────────────────────────────────────
 
 async function saveRecord({
   table,
@@ -473,7 +504,24 @@ async function saveRecordAndReturnId({
   return result.data?.id ?? null;
 }
 
-async function bootstrapMenuCategory(reference: string) {
+async function deleteRecord({
+  table,
+  id,
+}: {
+  table: string;
+  id: string;
+}) {
+  const client = getSupabaseAdminClientOrThrow();
+  const result = await client.from(table).delete().eq("id", id);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+}
+
+// ─── BUSINESS-SCOPED BOOTSTRAP HELPERS ───────────────────────────────────────
+
+async function bootstrapMenuCategory(businessId: string, reference: string) {
   const client = getSupabaseAdminClientOrThrow();
   const payload = await getAdminSitePayload();
   const sourceCategory = payload.menuCategories.find(
@@ -488,6 +536,7 @@ async function bootstrapMenuCategory(reference: string) {
     .from("menu_categories")
     .select("id, slug")
     .eq("slug", sourceCategory.slug)
+    .eq("business_id", businessId)
     .maybeSingle();
 
   if (existingCategoryResult.error) {
@@ -500,6 +549,7 @@ async function bootstrapMenuCategory(reference: string) {
     const insertedCategoryResult = await client
       .from("menu_categories")
       .insert({
+        business_id: businessId,
         name: sourceCategory.name,
         slug: sourceCategory.slug,
         description: sourceCategory.description ?? null,
@@ -546,6 +596,7 @@ async function bootstrapMenuCategory(reference: string) {
     const insertedItemResult = await client
       .from("menu_items")
       .insert({
+        business_id: businessId,
         category_id: categoryId,
         name: sourceItem.name,
         description: sourceItem.description,
@@ -575,7 +626,7 @@ async function bootstrapMenuCategory(reference: string) {
   };
 }
 
-async function resolveMenuCategoryId(reference: string) {
+async function resolveMenuCategoryId(businessId: string, reference: string) {
   if (isUuid(reference)) {
     return {
       categoryId: reference,
@@ -583,10 +634,10 @@ async function resolveMenuCategoryId(reference: string) {
     };
   }
 
-  return bootstrapMenuCategory(reference);
+  return bootstrapMenuCategory(businessId, reference);
 }
 
-async function bootstrapGalleryImage(reference: string) {
+async function bootstrapGalleryImage(businessId: string, reference: string) {
   const client = getSupabaseAdminClientOrThrow();
   const payload = await getAdminSitePayload();
   const sourceImage = payload.galleryImages.find((image) => image.id === reference);
@@ -599,6 +650,7 @@ async function bootstrapGalleryImage(reference: string) {
     .from("gallery_images")
     .select("id, sort_order, src")
     .eq("sort_order", sourceImage.sortOrder)
+    .eq("business_id", businessId)
     .maybeSingle();
 
   if (existingImageResult.error) {
@@ -612,6 +664,7 @@ async function bootstrapGalleryImage(reference: string) {
   const insertedImageResult = await client
     .from("gallery_images")
     .insert({
+      business_id: businessId,
       src: sourceImage.src,
       alt: sourceImage.alt,
       sort_order: sourceImage.sortOrder,
@@ -630,7 +683,7 @@ async function bootstrapGalleryImage(reference: string) {
   return insertedImageResult.data.id;
 }
 
-async function resolveGalleryImageId(reference: string | null) {
+async function resolveGalleryImageId(businessId: string, reference: string | null) {
   if (!reference) {
     return null;
   }
@@ -639,14 +692,15 @@ async function resolveGalleryImageId(reference: string | null) {
     return reference;
   }
 
-  return bootstrapGalleryImage(reference);
+  return bootstrapGalleryImage(businessId, reference);
 }
 
-async function bootstrapSpecialsCollection() {
+async function bootstrapSpecialsCollection(businessId: string) {
   const client = getSupabaseAdminClientOrThrow();
   const existingSpecialsResult = await client
     .from("specials")
-    .select("id, title, sort_order");
+    .select("id, title, sort_order")
+    .eq("business_id", businessId);
 
   if (existingSpecialsResult.error) {
     throw new Error(existingSpecialsResult.error.message);
@@ -670,6 +724,7 @@ async function bootstrapSpecialsCollection() {
     const insertedSpecialResult = await client
       .from("specials")
       .insert({
+        business_id: businessId,
         title: sourceSpecial.title,
         description: sourceSpecial.description,
         price: sourceSpecial.price,
@@ -694,7 +749,7 @@ async function bootstrapSpecialsCollection() {
   return specialIdBySourceId;
 }
 
-async function resolveSpecialId(reference: string | null) {
+async function resolveSpecialId(businessId: string, reference: string | null) {
   if (!reference) {
     return null;
   }
@@ -703,15 +758,16 @@ async function resolveSpecialId(reference: string | null) {
     return reference;
   }
 
-  const specialIdBySourceId = await bootstrapSpecialsCollection();
+  const specialIdBySourceId = await bootstrapSpecialsCollection(businessId);
   return specialIdBySourceId.get(reference) ?? null;
 }
 
-async function bootstrapHoursCollection() {
+async function bootstrapHoursCollection(businessId: string) {
   const client = getSupabaseAdminClientOrThrow();
   const existingHoursResult = await client
     .from("business_hours")
-    .select("id, day_label, sort_order");
+    .select("id, day_label, sort_order")
+    .eq("business_id", businessId);
 
   if (existingHoursResult.error) {
     throw new Error(existingHoursResult.error.message);
@@ -735,6 +791,7 @@ async function bootstrapHoursCollection() {
     const insertedHourResult = await client
       .from("business_hours")
       .insert({
+        business_id: businessId,
         day_label: sourceHour.dayLabel,
         open_text: sourceHour.openText,
         sort_order: sourceHour.sortOrder,
@@ -756,7 +813,7 @@ async function bootstrapHoursCollection() {
   return hourIdBySourceId;
 }
 
-async function resolveHourId(reference: string | null) {
+async function resolveHourId(businessId: string, reference: string | null) {
   if (!reference) {
     return null;
   }
@@ -765,38 +822,26 @@ async function resolveHourId(reference: string | null) {
     return reference;
   }
 
-  const hourIdBySourceId = await bootstrapHoursCollection();
+  const hourIdBySourceId = await bootstrapHoursCollection(businessId);
   return hourIdBySourceId.get(reference) ?? null;
 }
 
-async function deleteRecord({
-  table,
-  id,
-}: {
-  table: string;
-  id: string;
-}) {
-  const client = getSupabaseAdminClientOrThrow();
-  const result = await client.from(table).delete().eq("id", id);
-
-  if (result.error) {
-    throw new Error(result.error.message);
-  }
-}
-
-async function saveDeletedMenuSectionTombstone({
-  id,
-  name,
-  slug,
-  serviceWindow,
-  sortOrder,
-}: {
-  id: string | null;
-  name: string;
-  slug: string;
-  serviceWindow?: "breakfast" | "lunch" | "dinner" | "all-day";
-  sortOrder: number;
-}) {
+async function saveDeletedMenuSectionTombstone(
+  businessId: string,
+  {
+    id,
+    name,
+    slug,
+    serviceWindow,
+    sortOrder,
+  }: {
+    id: string | null;
+    name: string;
+    slug: string;
+    serviceWindow?: "breakfast" | "lunch" | "dinner" | "all-day";
+    sortOrder: number;
+  },
+) {
   const client = getSupabaseAdminClientOrThrow();
 
   let existingId = id;
@@ -806,6 +851,7 @@ async function saveDeletedMenuSectionTombstone({
       .from("menu_categories")
       .select("id")
       .eq("slug", slug)
+      .eq("business_id", businessId)
       .maybeSingle();
 
     if (existingCategory.error) {
@@ -830,6 +876,7 @@ async function saveDeletedMenuSectionTombstone({
     table: "menu_categories",
     id: existingId,
     values: {
+      business_id: businessId,
       name,
       slug,
       description: DELETED_MENU_SECTION_DESCRIPTION,
@@ -840,12 +887,15 @@ async function saveDeletedMenuSectionTombstone({
   });
 }
 
-async function getBusinessSettingsBase() {
+// ─── BASE STATE HELPERS ───────────────────────────────────────────────────────
+
+async function getBusinessSettingsBase(businessId: string) {
   const payload = await getAdminSitePayload();
 
   return {
     id: payload.meta.businessSettingsId,
     values: {
+      business_id: businessId,
       business_name: payload.brand.businessName,
       tagline: payload.brand.tagline,
       logo_url: payload.brand.logoUrl ?? null,
@@ -889,12 +939,13 @@ async function getBusinessSettingsBase() {
   };
 }
 
-async function getHomepageContentBase() {
+async function getHomepageContentBase(businessId: string) {
   const payload = await getAdminSitePayload();
 
   return {
     id: payload.meta.homepageContentId,
     values: {
+      business_id: businessId,
       hero_eyebrow: payload.settings.heroEyebrow,
       hero_headline: payload.settings.heroHeadline,
       hero_subheadline: payload.settings.heroSubheadline,
@@ -917,12 +968,13 @@ async function getHomepageContentBase() {
   };
 }
 
-async function getAnnouncementBase() {
+async function getAnnouncementBase(businessId: string) {
   const payload = await getAdminSitePayload();
 
   return {
     id: payload.meta.announcementId,
     values: {
+      business_id: businessId,
       title: payload.meta.announcementTitle,
       body: payload.settings.announcementText,
       is_active: payload.meta.announcementIsActive,
@@ -931,14 +983,16 @@ async function getAnnouncementBase() {
   };
 }
 
+// ─── PATCH HELPERS ────────────────────────────────────────────────────────────
+
 async function upsertBusinessSettingsPatch(
+  businessId: string,
   patch: Record<string, unknown>,
   path: string,
   successMessage: string,
 ) {
   try {
-    await getAdminClient(path);
-    const base = await getBusinessSettingsBase();
+    const base = await getBusinessSettingsBase(businessId);
     const mergedValues = {
       ...base.values,
       ...patch,
@@ -997,7 +1051,7 @@ async function upsertBusinessSettingsPatch(
             values: legacyValues,
           });
 
-          revalidateRestaurantPaths();
+          revalidateBranding();
           redirectWithState(path, {
             status:
               "Branding saved. Run the latest schema update to persist the new branding fields on the current Supabase table.",
@@ -1013,7 +1067,7 @@ async function upsertBusinessSettingsPatch(
 
       throw error;
     }
-    revalidateRestaurantPaths();
+    revalidateBranding();
     redirectWithState(path, { status: successMessage });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1024,13 +1078,13 @@ async function upsertBusinessSettingsPatch(
 }
 
 async function upsertHomepageContentPatch(
+  businessId: string,
   patch: Record<string, unknown>,
   path: string,
   successMessage: string,
 ) {
   try {
-    await getAdminClient(path);
-    const base = await getHomepageContentBase();
+    const base = await getHomepageContentBase(businessId);
     await saveHomepageContentRecord({
       id: base.id,
       values: {
@@ -1038,7 +1092,7 @@ async function upsertHomepageContentPatch(
         ...patch,
       },
     });
-    revalidateRestaurantPaths();
+    revalidateHomepage();
     redirectWithState(path, { status: successMessage });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1049,10 +1103,15 @@ async function upsertHomepageContentPatch(
   }
 }
 
+// ─── EXPORTED SERVER ACTIONS ──────────────────────────────────────────────────
+
 export async function saveSettingsAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/settings");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
 
   return upsertBusinessSettingsPatch(
+    businessId,
     {
       business_name: readRequiredString(formData, "business_name", "Business name"),
       tagline: readRequiredString(formData, "tagline", "Tagline"),
@@ -1067,42 +1126,14 @@ export async function saveSettingsAction(formData: FormData) {
       city: readRequiredString(formData, "city", "City"),
       state: readRequiredString(formData, "state", "State"),
       zip: readRequiredString(formData, "zip", "ZIP"),
-      background_color: readRequiredString(
-        formData,
-        "background_color",
-        "Background color",
-      ),
-      foreground_color: readRequiredString(
-        formData,
-        "foreground_color",
-        "Text color",
-      ),
+      background_color: readRequiredString(formData, "background_color", "Background color"),
+      foreground_color: readRequiredString(formData, "foreground_color", "Text color"),
       card_color: readRequiredString(formData, "card_color", "Box color"),
-      muted_section_color: readRequiredString(
-        formData,
-        "muted_section_color",
-        "Alternate section color",
-      ),
-      highlight_section_color: readRequiredString(
-        formData,
-        "highlight_section_color",
-        "Feature section color",
-      ),
-      header_background_color: readRequiredString(
-        formData,
-        "header_background_color",
-        "Header bar color",
-      ),
-      announcement_background_color: readRequiredString(
-        formData,
-        "announcement_background_color",
-        "Announcement bar color",
-      ),
-      announcement_text_color: readRequiredString(
-        formData,
-        "announcement_text_color",
-        "Announcement text color",
-      ),
+      muted_section_color: readRequiredString(formData, "muted_section_color", "Alternate section color"),
+      highlight_section_color: readRequiredString(formData, "highlight_section_color", "Feature section color"),
+      header_background_color: readRequiredString(formData, "header_background_color", "Header bar color"),
+      announcement_background_color: readRequiredString(formData, "announcement_background_color", "Announcement bar color"),
+      announcement_text_color: readRequiredString(formData, "announcement_text_color", "Announcement text color"),
       border_color: readRequiredString(formData, "border_color", "Border color"),
       primary_color: readRequiredString(formData, "primary_color", "Primary color"),
       secondary_color: readRequiredString(formData, "secondary_color", "Secondary color"),
@@ -1126,8 +1157,11 @@ export async function saveSettingsAction(formData: FormData) {
 
 export async function saveBusinessInfoAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/contact");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
 
   return upsertBusinessSettingsPatch(
+    businessId,
     {
       business_name: readRequiredString(formData, "business_name", "Business name"),
       tagline: readRequiredString(formData, "tagline", "Tagline"),
@@ -1145,6 +1179,9 @@ export async function saveBusinessInfoAction(formData: FormData) {
 
 export async function saveBrandingAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/branding");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
+
   const businessName = readRequiredString(formData, "business_name", "Business name");
   const logoFile = readOptionalFile(formData, "logo_file");
   const themeModeRaw = readOptionalString(formData, "theme_mode");
@@ -1168,18 +1205,9 @@ export async function saveBrandingAction(formData: FormData) {
             foregroundColor: readOptionalString(formData, "foreground_color"),
             cardColor: readOptionalString(formData, "card_color"),
             mutedSectionColor: readOptionalString(formData, "muted_section_color"),
-            highlightSectionColor: readOptionalString(
-              formData,
-              "highlight_section_color",
-            ),
-            announcementBackgroundColor: readOptionalString(
-              formData,
-              "announcement_background_color",
-            ),
-            announcementTextColor: readOptionalString(
-              formData,
-              "announcement_text_color",
-            ),
+            highlightSectionColor: readOptionalString(formData, "highlight_section_color"),
+            announcementBackgroundColor: readOptionalString(formData, "announcement_background_color"),
+            announcementTextColor: readOptionalString(formData, "announcement_text_color"),
             borderColor: readOptionalString(formData, "border_color"),
             primaryColor: readOptionalString(formData, "primary_color"),
             accentColor: readOptionalString(formData, "accent_color"),
@@ -1211,6 +1239,7 @@ export async function saveBrandingAction(formData: FormData) {
   }
 
   return upsertBusinessSettingsPatch(
+    businessId,
     {
       business_name: businessName,
       tagline: readRequiredString(formData, "tagline", "Tagline"),
@@ -1219,38 +1248,18 @@ export async function saveBrandingAction(formData: FormData) {
       theme_mode: savedThemeMode,
       theme_preset_id: resolvedTheme.id,
       theme_tokens: resolvedTheme.resolvedColors,
-      background_color:
-        readOptionalString(formData, "background_color") ??
-        legacyTheme.backgroundColor,
-      foreground_color:
-        readOptionalString(formData, "foreground_color") ??
-        legacyTheme.foregroundColor,
-      card_color:
-        readOptionalString(formData, "card_color") ?? legacyTheme.cardColor,
-      muted_section_color:
-        readOptionalString(formData, "muted_section_color") ??
-        legacyTheme.mutedSectionColor,
-      highlight_section_color:
-        readOptionalString(formData, "highlight_section_color") ??
-        legacyTheme.highlightSectionColor,
-      header_background_color:
-        readOptionalString(formData, "header_background_color") ??
-        legacyTheme.headerBackgroundColor,
-      announcement_background_color:
-        readOptionalString(formData, "announcement_background_color") ??
-        legacyTheme.announcementBackgroundColor,
-      announcement_text_color:
-        readOptionalString(formData, "announcement_text_color") ??
-        legacyTheme.announcementTextColor,
-      border_color:
-        readOptionalString(formData, "border_color") ?? legacyTheme.borderColor,
-      primary_color:
-        readOptionalString(formData, "primary_color") ?? legacyTheme.primaryColor,
-      secondary_color:
-        readOptionalString(formData, "secondary_color") ??
-        legacyTheme.secondaryColor,
-      accent_color:
-        readOptionalString(formData, "accent_color") ?? legacyTheme.accentColor,
+      background_color: readOptionalString(formData, "background_color") ?? legacyTheme.backgroundColor,
+      foreground_color: readOptionalString(formData, "foreground_color") ?? legacyTheme.foregroundColor,
+      card_color: readOptionalString(formData, "card_color") ?? legacyTheme.cardColor,
+      muted_section_color: readOptionalString(formData, "muted_section_color") ?? legacyTheme.mutedSectionColor,
+      highlight_section_color: readOptionalString(formData, "highlight_section_color") ?? legacyTheme.highlightSectionColor,
+      header_background_color: readOptionalString(formData, "header_background_color") ?? legacyTheme.headerBackgroundColor,
+      announcement_background_color: readOptionalString(formData, "announcement_background_color") ?? legacyTheme.announcementBackgroundColor,
+      announcement_text_color: readOptionalString(formData, "announcement_text_color") ?? legacyTheme.announcementTextColor,
+      border_color: readOptionalString(formData, "border_color") ?? legacyTheme.borderColor,
+      primary_color: readOptionalString(formData, "primary_color") ?? legacyTheme.primaryColor,
+      secondary_color: readOptionalString(formData, "secondary_color") ?? legacyTheme.secondaryColor,
+      accent_color: readOptionalString(formData, "accent_color") ?? legacyTheme.accentColor,
       heading_font: headingFontValue,
       body_font: bodyFontValue,
     },
@@ -1261,8 +1270,11 @@ export async function saveBrandingAction(formData: FormData) {
 
 export async function saveContactInfoAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/contact");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
 
   return upsertBusinessSettingsPatch(
+    businessId,
     {
       phone: readRequiredString(formData, "phone", "Phone"),
       email: readOptionalString(formData, "email"),
@@ -1282,8 +1294,11 @@ export async function saveContactInfoAction(formData: FormData) {
 
 export async function saveFeatureSettingsAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/settings");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
 
   return upsertBusinessSettingsPatch(
+    businessId,
     {
       show_breakfast_menu: readCheckbox(formData, "show_breakfast_menu"),
       show_lunch_menu: readCheckbox(formData, "show_lunch_menu"),
@@ -1305,19 +1320,17 @@ export async function saveHomepageContentAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const heroImageFile = readOptionalFile(formData, "hero_image_file");
     const businessName = readRequiredString(formData, "business_name", "Business name");
     let uploadedHeroImageUrl: string | null = null;
 
     if (heroImageFile) {
-      uploadedHeroImageUrl = await uploadHomepageHeroImageFile(
-        heroImageFile,
-        businessName,
-      );
+      uploadedHeroImageUrl = await uploadHomepageHeroImageFile(heroImageFile, businessName);
     }
 
-    const base = await getHomepageContentBase();
+    const base = await getHomepageContentBase(businessId);
     await saveHomepageContentRecord({
       id: base.id,
       values: {
@@ -1325,33 +1338,12 @@ export async function saveHomepageContentAction(formData: FormData) {
         hero_eyebrow: readRequiredString(formData, "hero_eyebrow", "Small headline"),
         hero_headline: readRequiredString(formData, "hero_headline", "Main headline"),
         hero_subheadline: readRequiredString(formData, "hero_subheadline", "Hero text"),
-        hero_primary_cta_label: readRequiredString(
-          formData,
-          "hero_primary_cta_label",
-          "Main button text",
-        ),
-        hero_primary_cta_href: readRequiredString(
-          formData,
-          "hero_primary_cta_href",
-          "Main button link",
-        ),
-        hero_secondary_cta_label: readRequiredString(
-          formData,
-          "hero_secondary_cta_label",
-          "Second button text",
-        ),
-        hero_secondary_cta_href: readRequiredString(
-          formData,
-          "hero_secondary_cta_href",
-          "Second button link",
-        ),
-        hero_image_url:
-          uploadedHeroImageUrl ?? readOptionalString(formData, "hero_image_url"),
-        quick_info_hours_label: readRequiredString(
-          formData,
-          "quick_info_hours_label",
-          "Quick hours summary",
-        ),
+        hero_primary_cta_label: readRequiredString(formData, "hero_primary_cta_label", "Main button text"),
+        hero_primary_cta_href: readRequiredString(formData, "hero_primary_cta_href", "Main button link"),
+        hero_secondary_cta_label: readRequiredString(formData, "hero_secondary_cta_label", "Second button text"),
+        hero_secondary_cta_href: readRequiredString(formData, "hero_secondary_cta_href", "Second button link"),
+        hero_image_url: uploadedHeroImageUrl ?? readOptionalString(formData, "hero_image_url"),
+        quick_info_hours_label: readRequiredString(formData, "quick_info_hours_label", "Quick hours summary"),
         ordering_notice: readOptionalString(formData, "ordering_notice"),
         gallery_title: readOptionalString(formData, "gallery_title"),
         gallery_subtitle: readOptionalString(formData, "gallery_subtitle"),
@@ -1364,7 +1356,7 @@ export async function saveHomepageContentAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateHomepage();
     redirectWithState(path, {
       status: uploadedHeroImageUrl
         ? "Homepage content saved and hero image uploaded."
@@ -1373,22 +1365,20 @@ export async function saveHomepageContentAction(formData: FormData) {
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
-      error:
-        error instanceof Error ? error.message : "Unable to save homepage content.",
+      error: error instanceof Error ? error.message : "Unable to save homepage content.",
     });
   }
 }
 
 export async function saveQuickHoursAction(formData: FormData) {
   const path = resolveRedirectPath(formData, "/admin/hours");
+  await getAdminClient(path);
+  const businessId = await getCurrentAdminBusinessId();
 
   return upsertHomepageContentPatch(
+    businessId,
     {
-      quick_info_hours_label: readRequiredString(
-        formData,
-        "quick_info_hours_label",
-        "Quick hours summary",
-      ),
+      quick_info_hours_label: readRequiredString(formData, "quick_info_hours_label", "Quick hours summary"),
     },
     path,
     "Quick hours summary saved.",
@@ -1400,7 +1390,8 @@ export async function saveAnnouncementAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
-    const base = await getAnnouncementBase();
+    const businessId = await getCurrentAdminBusinessId();
+    const base = await getAnnouncementBase(businessId);
 
     await saveRecord({
       table: "announcements",
@@ -1414,13 +1405,12 @@ export async function saveAnnouncementAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateHomepage();
     redirectWithState(path, { status: "Announcement saved." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
-      error:
-        error instanceof Error ? error.message : "Unable to save announcement.",
+      error: error instanceof Error ? error.message : "Unable to save announcement.",
     });
   }
 }
@@ -1430,15 +1420,12 @@ export async function saveGalleryImageAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readOptionalString(formData, "gallery_image_id");
-    const resolvedImageId = await resolveGalleryImageId(id);
+    const resolvedImageId = await resolveGalleryImageId(businessId, id);
     const photoFile = readOptionalFile(formData, "photo_file");
-    const businessName = readRequiredString(
-      formData,
-      "business_name",
-      "Business name",
-    );
+    const businessName = readRequiredString(formData, "business_name", "Business name");
     let uploadedPhotoUrl: string | null = null;
 
     if (photoFile) {
@@ -1456,6 +1443,7 @@ export async function saveGalleryImageAction(formData: FormData) {
       table: "gallery_images",
       id: resolvedImageId,
       values: {
+        business_id: businessId,
         src: finalSrc,
         alt: readRequiredString(formData, "alt", "Photo description"),
         sort_order: readSortOrder(formData),
@@ -1463,7 +1451,7 @@ export async function saveGalleryImageAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidatePhotos();
     redirectWithState(path, {
       status: uploadedPhotoUrl ? "Photo uploaded and saved." : "Photo saved.",
     });
@@ -1480,9 +1468,10 @@ export async function deleteGalleryImageAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readRequiredString(formData, "gallery_image_id", "Photo");
-    const resolvedImageId = await resolveGalleryImageId(id);
+    const resolvedImageId = await resolveGalleryImageId(businessId, id);
 
     if (!resolvedImageId) {
       throw new Error("The selected photo could not be found.");
@@ -1490,7 +1479,7 @@ export async function deleteGalleryImageAction(formData: FormData) {
 
     await deleteRecord({ table: "gallery_images", id: resolvedImageId });
 
-    revalidateRestaurantPaths();
+    revalidatePhotos();
     redirectWithState(path, { status: "Photo deleted." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1505,14 +1494,16 @@ export async function saveSpecialAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readOptionalString(formData, "special_id");
-    const resolvedSpecialId = await resolveSpecialId(id);
+    const resolvedSpecialId = await resolveSpecialId(businessId, id);
 
     await saveRecord({
       table: "specials",
       id: resolvedSpecialId,
       values: {
+        business_id: businessId,
         title: readRequiredString(formData, "title", "Special name"),
         description: readRequiredString(formData, "description", "Description"),
         price: readOptionalPrice(formData, "price"),
@@ -1523,7 +1514,8 @@ export async function saveSpecialAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    void queueSpecialPostIfEnabled(businessId, resolvedSpecialId, "upsert");
+    revalidateSpecials();
     redirectWithState(path, { status: "Special saved." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1538,9 +1530,10 @@ export async function deleteSpecialAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readRequiredString(formData, "special_id", "Special");
-    const resolvedSpecialId = await resolveSpecialId(id);
+    const resolvedSpecialId = await resolveSpecialId(businessId, id);
 
     if (!resolvedSpecialId) {
       throw new Error("The selected special could not be found.");
@@ -1548,7 +1541,8 @@ export async function deleteSpecialAction(formData: FormData) {
 
     await deleteRecord({ table: "specials", id: resolvedSpecialId });
 
-    revalidateRestaurantPaths();
+    void queueSpecialPostIfEnabled(businessId, resolvedSpecialId, "delete");
+    revalidateSpecials();
     redirectWithState(path, { status: "Special deleted." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1563,6 +1557,7 @@ export async function saveCategoryAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readOptionalString(formData, "category_id");
     const name = readRequiredString(formData, "name", "Menu section name");
@@ -1574,7 +1569,7 @@ export async function saveCategoryAction(formData: FormData) {
     }
 
     let resolvedCategoryId = id
-      ? (await resolveMenuCategoryId(id)).categoryId
+      ? (await resolveMenuCategoryId(businessId, id)).categoryId
       : null;
 
     if (!resolvedCategoryId) {
@@ -1583,6 +1578,7 @@ export async function saveCategoryAction(formData: FormData) {
         .from("menu_categories")
         .select("id, description")
         .eq("slug", slug)
+        .eq("business_id", businessId)
         .maybeSingle();
 
       if (existingCategoryResult.error) {
@@ -1591,8 +1587,7 @@ export async function saveCategoryAction(formData: FormData) {
 
       if (
         existingCategoryResult.data?.id &&
-        existingCategoryResult.data.description ===
-          DELETED_MENU_SECTION_DESCRIPTION
+        existingCategoryResult.data.description === DELETED_MENU_SECTION_DESCRIPTION
       ) {
         resolvedCategoryId = existingCategoryResult.data.id;
       }
@@ -1602,6 +1597,7 @@ export async function saveCategoryAction(formData: FormData) {
       table: "menu_categories",
       id: resolvedCategoryId,
       values: {
+        business_id: businessId,
         name,
         slug,
         description: readOptionalString(formData, "description"),
@@ -1611,7 +1607,7 @@ export async function saveCategoryAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateMenu();
     redirectWithState(
       savedCategoryId ? `/admin/menu?category=${savedCategoryId}` : path,
       { status: "Menu section saved." },
@@ -1619,8 +1615,7 @@ export async function saveCategoryAction(formData: FormData) {
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
-      error:
-        error instanceof Error ? error.message : "Unable to save menu section.",
+      error: error instanceof Error ? error.message : "Unable to save menu section.",
     });
   }
 }
@@ -1630,6 +1625,7 @@ export async function deleteCategoryAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readRequiredString(formData, "category_id", "Menu section");
     const payload = await getAdminSitePayload();
@@ -1644,7 +1640,7 @@ export async function deleteCategoryAction(formData: FormData) {
     );
 
     if (isSeedBacked) {
-      await saveDeletedMenuSectionTombstone({
+      await saveDeletedMenuSectionTombstone(businessId, {
         id: isUuid(id) ? id : null,
         name: category.name,
         slug: category.slug,
@@ -1659,13 +1655,12 @@ export async function deleteCategoryAction(formData: FormData) {
       await deleteRecord({ table: "menu_categories", id });
     }
 
-    revalidateRestaurantPaths();
+    revalidateMenu();
     redirectWithState(path, { status: "Menu section deleted." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
-      error:
-        error instanceof Error ? error.message : "Unable to delete menu section.",
+      error: error instanceof Error ? error.message : "Unable to delete menu section.",
     });
   }
 }
@@ -1675,14 +1670,12 @@ export async function saveMenuItemAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readOptionalString(formData, "menu_item_id");
-    const categoryReference = readRequiredString(
-      formData,
-      "category_id",
-      "Menu section",
-    );
+    const categoryReference = readRequiredString(formData, "category_id", "Menu section");
     const { categoryId, itemIdBySourceId } = await resolveMenuCategoryId(
+      businessId,
       categoryReference,
     );
     const resolvedItemId =
@@ -1692,6 +1685,7 @@ export async function saveMenuItemAction(formData: FormData) {
       table: "menu_items",
       id: resolvedItemId,
       values: {
+        business_id: businessId,
         category_id: categoryId,
         name: readRequiredString(formData, "name", "Item name"),
         description: readRequiredString(formData, "description", "Item description"),
@@ -1704,7 +1698,7 @@ export async function saveMenuItemAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateMenu();
     redirectWithState(
       savedItemId
         ? `/admin/menu?category=${categoryId}&item=${savedItemId}`
@@ -1724,14 +1718,11 @@ export async function deleteMenuItemAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const itemId = readRequiredString(formData, "menu_item_id", "Menu item");
-    const categoryReference = readRequiredString(
-      formData,
-      "category_id",
-      "Menu section",
-    );
-    const { itemIdBySourceId } = await resolveMenuCategoryId(categoryReference);
+    const categoryReference = readRequiredString(formData, "category_id", "Menu section");
+    const { itemIdBySourceId } = await resolveMenuCategoryId(businessId, categoryReference);
     const resolvedItemId =
       isUuid(itemId) ? itemId : itemIdBySourceId.get(itemId) ?? null;
 
@@ -1741,7 +1732,7 @@ export async function deleteMenuItemAction(formData: FormData) {
 
     await deleteRecord({ table: "menu_items", id: resolvedItemId });
 
-    revalidateRestaurantPaths();
+    revalidateMenu();
     redirectWithState(path, { status: "Menu item deleted." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1756,14 +1747,16 @@ export async function saveHourAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readOptionalString(formData, "hour_id");
-    const resolvedHourId = await resolveHourId(id);
+    const resolvedHourId = await resolveHourId(businessId, id);
 
     await saveRecord({
       table: "business_hours",
       id: resolvedHourId,
       values: {
+        business_id: businessId,
         day_label: readRequiredString(formData, "day_label", "Day"),
         open_text: readRequiredString(formData, "open_text", "Open hours"),
         sort_order: readSortOrder(formData),
@@ -1771,7 +1764,8 @@ export async function saveHourAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    void queueHoursSyncIfEnabled(businessId);
+    revalidateHours();
     redirectWithState(path, { status: "Hours saved." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1786,9 +1780,10 @@ export async function deleteHourAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
     const id = readRequiredString(formData, "hour_id", "Hours row");
-    const resolvedHourId = await resolveHourId(id);
+    const resolvedHourId = await resolveHourId(businessId, id);
 
     if (!resolvedHourId) {
       throw new Error("The selected hours row could not be found.");
@@ -1796,7 +1791,8 @@ export async function deleteHourAction(formData: FormData) {
 
     await deleteRecord({ table: "business_hours", id: resolvedHourId });
 
-    revalidateRestaurantPaths();
+    void queueHoursSyncIfEnabled(businessId);
+    revalidateHours();
     redirectWithState(path, { status: "Hours row deleted." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1811,8 +1807,9 @@ export async function saveSetupHoursAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
-
+    const businessId = await getCurrentAdminBusinessId();
     const client = getSupabaseAdminClientOrThrow();
+
     const days = formData.getAll("day_label");
     const hours = formData.getAll("open_text");
 
@@ -1828,6 +1825,7 @@ export async function saveSetupHoursAction(formData: FormData) {
           : "Closed";
 
       return {
+        business_id: businessId,
         day_label: dayLabel,
         open_text: openText,
         sort_order: index + 1,
@@ -1835,7 +1833,11 @@ export async function saveSetupHoursAction(formData: FormData) {
       };
     });
 
-    const deleteResult = await client.from("business_hours").delete().neq("id", "");
+    // Delete only this business's hours (not all businesses)
+    const deleteResult = await client
+      .from("business_hours")
+      .delete()
+      .eq("business_id", businessId);
 
     if (deleteResult.error) {
       throw new Error(deleteResult.error.message);
@@ -1849,13 +1851,8 @@ export async function saveSetupHoursAction(formData: FormData) {
       }
     }
 
-    const quickSummary = readRequiredString(
-      formData,
-      "quick_info_hours_label",
-      "Quick hours summary",
-    );
-
-    const homepageBase = await getHomepageContentBase();
+    const quickSummary = readRequiredString(formData, "quick_info_hours_label", "Quick hours summary");
+    const homepageBase = await getHomepageContentBase(businessId);
     await saveHomepageContentRecord({
       id: homepageBase.id,
       values: {
@@ -1864,7 +1861,7 @@ export async function saveSetupHoursAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateHours();
     redirectWithState(path, { status: "Hours saved. Continue when you're ready." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
@@ -1879,14 +1876,16 @@ export async function saveSetupMenuAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
+    const client = getSupabaseAdminClientOrThrow();
 
     const categoryName = readRequiredString(formData, "name", "Menu section name");
     const categorySlug = slugify(readOptionalString(formData, "slug") ?? categoryName);
 
-    const client = getSupabaseAdminClientOrThrow();
     const insertCategoryResult = await client
       .from("menu_categories")
       .insert({
+        business_id: businessId,
         name: categoryName,
         slug: categorySlug,
         description: readOptionalString(formData, "description"),
@@ -1906,6 +1905,7 @@ export async function saveSetupMenuAction(formData: FormData) {
 
     if (itemName && itemPrice !== null) {
       const insertItemResult = await client.from("menu_items").insert({
+        business_id: businessId,
         category_id: insertCategoryResult.data.id,
         name: itemName,
         description: readOptionalString(formData, "item_description") ?? "",
@@ -1922,13 +1922,12 @@ export async function saveSetupMenuAction(formData: FormData) {
       }
     }
 
-    revalidateRestaurantPaths();
+    revalidateMenu();
     redirectWithState(path, { status: "Starter menu section saved." });
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
-      error:
-        error instanceof Error ? error.message : "Unable to save starter menu section.",
+      error: error instanceof Error ? error.message : "Unable to save starter menu section.",
     });
   }
 }
@@ -1938,8 +1937,9 @@ export async function saveSetupSpecialsAction(formData: FormData) {
 
   try {
     await getAdminClient(path);
+    const businessId = await getCurrentAdminBusinessId();
 
-    const announcementBase = await getAnnouncementBase();
+    const announcementBase = await getAnnouncementBase(businessId);
     await saveRecord({
       table: "announcements",
       id: announcementBase.id,
@@ -1956,6 +1956,7 @@ export async function saveSetupSpecialsAction(formData: FormData) {
       table: "specials",
       id: null,
       values: {
+        business_id: businessId,
         title: readRequiredString(formData, "title", "Special name"),
         description: readRequiredString(formData, "description", "Description"),
         price: readOptionalPrice(formData, "price"),
@@ -1966,7 +1967,7 @@ export async function saveSetupSpecialsAction(formData: FormData) {
       },
     });
 
-    revalidateRestaurantPaths();
+    revalidateSpecials();
     redirectWithState(path, { status: "Announcement and featured special saved." });
   } catch (error) {
     rethrowIfRedirectSignal(error);

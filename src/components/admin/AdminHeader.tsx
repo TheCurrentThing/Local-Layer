@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { signOutAction } from "@/app/admin/auth-actions";
+import { AdminThemeToggle } from "@/components/admin/AdminThemeToggle";
 
 export function AdminHeader({
   eyebrow = "Overview",
   title,
   description: _description,
   previewHref = "/preview",
+  liveHref,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   previewHref?: string;
+  liveHref?: string;
 }) {
   return (
     <header
@@ -21,8 +25,8 @@ export function AdminHeader({
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 16px",
-        background: "#0d0d10",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "var(--admin-chrome)",
+        borderBottom: "1px solid var(--admin-chrome-border)",
         flexShrink: 0,
         zIndex: 30,
         gap: 16,
@@ -41,7 +45,7 @@ export function AdminHeader({
         <span
           style={{
             fontSize: 10,
-            color: "#52525c",
+            color: "var(--admin-text-muted)",
             fontWeight: 600,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
@@ -51,7 +55,6 @@ export function AdminHeader({
           Admin
         </span>
 
-        {/* chevron */}
         <svg
           width="11"
           height="11"
@@ -72,7 +75,7 @@ export function AdminHeader({
         <span
           style={{
             fontSize: 10,
-            color: "#6b6b75",
+            color: "var(--admin-text-dim)",
             fontWeight: 600,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
@@ -82,7 +85,6 @@ export function AdminHeader({
           {eyebrow}
         </span>
 
-        {/* chevron */}
         <svg
           width="11"
           height="11"
@@ -104,7 +106,7 @@ export function AdminHeader({
           style={{
             fontSize: 13,
             fontWeight: 500,
-            color: "#c9c7c0",
+            color: "var(--admin-text)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -131,8 +133,8 @@ export function AdminHeader({
             gap: 5,
             padding: "4px 10px",
             borderRadius: 6,
-            background: "rgba(255,255,255,0.028)",
-            border: "1px solid rgba(255,255,255,0.055)",
+            background: "var(--admin-panel-bg)",
+            border: "1px solid var(--admin-panel-border)",
           }}
         >
           <span
@@ -158,6 +160,35 @@ export function AdminHeader({
           </span>
         </div>
 
+        {/* View Live Site */}
+        {liveHref && (
+          <a
+            href={liveHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "5px 12px",
+              borderRadius: 6,
+              background: "rgba(74,222,128,0.06)",
+              border: "1px solid rgba(74,222,128,0.16)",
+              color: "#4ade80",
+              textDecoration: "none",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            View Live
+          </a>
+        )}
+
+        {/* Theme toggle */}
+        <AdminThemeToggle />
+
         {/* Overview */}
         <Link
           href="/admin"
@@ -167,9 +198,9 @@ export function AdminHeader({
             gap: 5,
             padding: "5px 12px",
             borderRadius: 6,
-            background: "rgba(255,255,255,0.028)",
-            border: "1px solid rgba(255,255,255,0.055)",
-            color: "#8a8894",
+            background: "var(--admin-panel-bg)",
+            border: "1px solid var(--admin-panel-border)",
+            color: "var(--admin-ghost-text)",
             textDecoration: "none",
             fontSize: 10,
             fontWeight: 600,
@@ -213,6 +244,29 @@ export function AdminHeader({
         >
           Preview
         </a>
+
+        {/* Sign Out */}
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "5px 12px",
+              borderRadius: 6,
+              background: "transparent",
+              border: "1px solid var(--admin-chrome-border)",
+              color: "var(--admin-text-dim)",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
+          >
+            Sign Out
+          </button>
+        </form>
       </div>
     </header>
   );

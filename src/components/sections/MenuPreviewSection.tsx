@@ -8,10 +8,12 @@ export function MenuPreviewSection({
   categories,
   title,
   subtitle,
+  basePath = "",
 }: {
   categories: MenuCategory[];
   title?: string;
   subtitle?: string;
+  basePath?: string;
 }) {
   const populated = categories.filter((c) => c.items.length > 0);
   const [selectedId, setSelectedId] = useState<string>(populated[0]?.id ?? "");
@@ -37,7 +39,7 @@ export function MenuPreviewSection({
             ) : null}
           </div>
           <Button asChild>
-            <a href="/menu">Open Full Menu</a>
+            <a href={`${basePath}/menu`}>Open Full Menu</a>
           </Button>
         </div>
 

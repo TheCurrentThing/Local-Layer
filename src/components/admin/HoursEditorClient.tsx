@@ -49,7 +49,7 @@ function parseOpenText(text: string): { open: string; close: string } {
   };
 }
 
-/** Build week state from BranchKit hours rows */
+/** Build week state from Local Layer hours rows */
 function initWeek(hours: HourEntry[]): WeekState {
   const result = {} as WeekState;
   for (const day of DAY_NAMES) {

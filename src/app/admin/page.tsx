@@ -211,6 +211,7 @@ export default async function AdminDashboardPage() {
       eyebrow="Overview"
       title="Overview"
       previewHref="/preview"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <div

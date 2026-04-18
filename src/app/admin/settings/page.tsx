@@ -1,104 +1,577 @@
+import Link from "next/link";
 import { AdminFeedback } from "@/components/admin/AdminFeedback";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { SectionVisibilityEditor } from "@/components/admin/SectionVisibilityEditor";
-import { PageLink } from "@/components/admin/FormPrimitives";
+import { HiddenField } from "@/components/admin/FormPrimitives";
+import { PendingSubmitButton } from "@/components/admin/SubmitButtons";
+import { saveFeatureSettingsAction } from "@/app/admin/actions";
 import { getAdminSitePayload } from "@/lib/queries";
+import { getKitConfig, getKitLabel } from "@/lib/kit-config";
+import type { FeatureFlags } from "@/types/site";
+import type { KitModules } from "@/types/kit";
+
+export const dynamic = "force-dynamic";
 
 type AdminPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function AdminSettingsPage({ searchParams }: AdminPageProps) {
+  const params = await searchParams;
   const payload = await getAdminSitePayload();
-  const enabledCount = [
-    payload.features.showSpecials,
-    payload.features.showGallery,
-    payload.features.showTestimonials,
-    payload.features.showMap,
-    payload.features.showOnlineOrdering,
-    payload.features.showStickyMobileBar,
-    payload.features.showBreakfastMenu,
-    payload.features.showLunchMenu,
-    payload.features.showDinnerMenu,
-  ].filter(Boolean).length;
+  const { features, kitType, brand, businessSlug } = payload;
+  const kitConfig = getKitConfig(kitType);
+  const { modules } = kitConfig;
+
+  const siteStatus = "live"; // derives from business.site_status — passed through brand for now
 
   return (
     <AdminShell
       activeKey="settings"
-      brandName={payload.brand.businessName}
-      eyebrow="System Settings"
-      title="Visibility Control"
-      description="Use this screen for site-wide switches that shape what guests can see across navigation, utility actions, and supporting sections."
-      contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
+      brandName={brand.businessName}
+      eyebrow="System"
+      title="Site Modules"
+      description="Control which sections are active on your live site."
+      liveHref={businessSlug ? `/${businessSlug}` : undefined}
     >
-      <AdminFeedback searchParams={searchParams} />
+      <AdminFeedback searchParams={params} />
 
-      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)_340px]">
-        <aside className="admin-panel rounded-[1.5rem]">
-          <div className="border-b border-white/[0.07] px-4 py-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-              System State
-            </p>
-            <h2 className="mt-1 text-[13px] font-medium text-white/80">Visibility snapshot</h2>
+      {/* ── Two-column layout ── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "220px minmax(0, 1fr)",
+          gap: 12,
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        {/* ── LEFT: Kit identity + module index ── */}
+        <aside
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            overflowY: "auto",
+          }}
+          className="admin-scrollbar"
+        >
+          {/* Kit identity */}
+          <div
+            style={{
+              background: "var(--admin-surface)",
+              border: "1px solid var(--admin-border)",
+              borderRadius: 12,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "10px 14px",
+                borderBottom: "1px solid var(--admin-border)",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "#d97706",
+                }}
+              >
+                Kit Type
+              </p>
+            </div>
+            <div style={{ padding: "12px 14px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--admin-text)",
+                }}
+              >
+                {getKitLabel(kitType)}
+              </p>
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  fontSize: 11,
+                  color: "var(--admin-text-muted)",
+                  lineHeight: 1.5,
+                }}
+              >
+                Controls which modules are available on this site.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-4 p-4 text-sm text-white/62">
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Enabled</p>
-              <p className="mt-3 text-base font-semibold text-white">{enabledCount} system switches live</p>
-            </div>
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Homepage</p>
-              <p className="mt-3">Specials: {payload.features.showSpecials ? "Visible" : "Hidden"}</p>
-              <p className="mt-1">Gallery: {payload.features.showGallery ? "Visible" : "Hidden"}</p>
-              <p className="mt-1">Map: {payload.features.showMap ? "Visible" : "Hidden"}</p>
-            </div>
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/36">Utility</p>
-              <p className="mt-3">
-                Ordering links: {payload.features.showOnlineOrdering ? "On" : "Off"}
+          {/* Active modules index */}
+          <div
+            style={{
+              background: "var(--admin-surface)",
+              border: "1px solid var(--admin-border)",
+              borderRadius: 12,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "10px 14px",
+                borderBottom: "1px solid var(--admin-border)",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "#d97706",
+                }}
+              >
+                Active Modules
               </p>
-              <p className="mt-1">
-                Mobile bar: {payload.features.showStickyMobileBar ? "On" : "Off"}
+            </div>
+            <div style={{ padding: "8px 6px" }}>
+              <ModuleIndexItem modules={modules} moduleKey="homepage" label="Homepage" href="/admin/homepage" />
+              <ModuleIndexItem modules={modules} moduleKey="branding" label="Branding" href="/admin/branding" />
+              <ModuleIndexItem modules={modules} moduleKey="menu" label="Menu" href="/admin/menu" />
+              <ModuleIndexItem modules={modules} moduleKey="specials" label="Specials" href="/admin/specials" />
+              <ModuleIndexItem modules={modules} moduleKey="hours" label="Hours" href="/admin/hours" />
+              <ModuleIndexItem modules={modules} moduleKey="photos" label="Photos" href="/admin/photos" />
+              <ModuleIndexItem modules={modules} moduleKey="contact" label="Contact" href="/admin/contact" />
+              <ModuleIndexItem modules={modules} moduleKey="google" label="Google" href="/admin/google" />
+              <ModuleIndexItem modules={modules} moduleKey="launch" label="Launch" href="/admin/launch" />
+            </div>
+          </div>
+
+          {/* Site status */}
+          <div
+            style={{
+              background: "var(--admin-surface)",
+              border: "1px solid var(--admin-border)",
+              borderRadius: 12,
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ padding: "12px 14px" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "ui-monospace, monospace",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "var(--admin-text-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                Site Status
               </p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span
+                  className="animate-pulse-dot"
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "#4ade80",
+                    display: "inline-block",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "#4ade80",
+                  }}
+                >
+                  Live
+                </span>
+              </div>
+              {businessSlug && (
+                <a
+                  href={`/${businessSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 8,
+                    fontSize: 11,
+                    color: "var(--admin-text-muted)",
+                    textDecoration: "none",
+                    borderBottom: "1px solid var(--admin-border)",
+                    paddingBottom: 1,
+                  }}
+                >
+                  /{businessSlug} ↗
+                </a>
+              )}
             </div>
           </div>
         </aside>
 
-        <div className="admin-scrollbar min-h-0 overflow-y-auto pr-1">
-          <SectionVisibilityEditor
-            title="Site-wide display settings"
-            description="These options affect navigation, menu timing, maps, and mobile action buttons."
-            features={payload.features}
-            redirectPath="/admin/settings"
-          />
+        {/* ── RIGHT: Module control panels ── */}
+        <div
+          className="admin-scrollbar"
+          style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <form action={saveFeatureSettingsAction} style={{ display: "contents" }}>
+            <HiddenField name="redirect_to" value="/admin/settings" />
+
+            {/* ── Content Sections ────────────────────────────────────────── */}
+            {(modules.specials || modules.photos) && (
+              <ModulePanel
+                eyebrow="Content"
+                title="Content Sections"
+                description="Control which content sections appear on your public site."
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {modules.specials ? (
+                    <ToggleRow
+                      name="show_specials"
+                      label="Show Specials"
+                      hint="Displays the daily specials section on the homepage."
+                      defaultChecked={features.showSpecials}
+                    />
+                  ) : (
+                    <HiddenField name="show_specials" value={features.showSpecials ? "on" : ""} />
+                  )}
+
+                  {modules.photos ? (
+                    <ToggleRow
+                      name="show_gallery"
+                      label="Show Photo Gallery"
+                      hint="Shows the photo grid section on the homepage."
+                      defaultChecked={features.showGallery}
+                    />
+                  ) : (
+                    <HiddenField name="show_gallery" value={features.showGallery ? "on" : ""} />
+                  )}
+
+                  <ToggleRow
+                    name="show_testimonials"
+                    label="Show Testimonials"
+                    hint="Shows a testimonials section if any are configured."
+                    defaultChecked={features.showTestimonials}
+                  />
+                </div>
+              </ModulePanel>
+            )}
+
+            {/* Preserve hidden when content panel not shown */}
+            {!modules.specials && !modules.photos && (
+              <>
+                <HiddenField name="show_specials" value={features.showSpecials ? "on" : ""} />
+                <HiddenField name="show_gallery" value={features.showGallery ? "on" : ""} />
+                <HiddenField name="show_testimonials" value={features.showTestimonials ? "on" : ""} />
+              </>
+            )}
+
+            {/* ── Menu Service Windows ─────────────────────────────────────── */}
+            {modules.menu ? (
+              <ModulePanel
+                eyebrow="Menu"
+                title="Service Windows"
+                description="Control which meal periods appear on the menu page."
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <ToggleRow
+                    name="show_breakfast_menu"
+                    label="Breakfast"
+                    hint="Shows items tagged for the breakfast service window."
+                    defaultChecked={features.showBreakfastMenu}
+                  />
+                  <ToggleRow
+                    name="show_lunch_menu"
+                    label="Lunch"
+                    hint="Shows items tagged for the lunch service window."
+                    defaultChecked={features.showLunchMenu}
+                  />
+                  <ToggleRow
+                    name="show_dinner_menu"
+                    label="Dinner"
+                    hint="Shows items tagged for the dinner service window."
+                    defaultChecked={features.showDinnerMenu}
+                  />
+                </div>
+              </ModulePanel>
+            ) : (
+              <>
+                <HiddenField name="show_breakfast_menu" value={features.showBreakfastMenu ? "on" : ""} />
+                <HiddenField name="show_lunch_menu" value={features.showLunchMenu ? "on" : ""} />
+                <HiddenField name="show_dinner_menu" value={features.showDinnerMenu ? "on" : ""} />
+              </>
+            )}
+
+            {/* ── Contact & Location ───────────────────────────────────────── */}
+            {modules.contact ? (
+              <ModulePanel
+                eyebrow="Contact"
+                title="Location Features"
+                description="Enhance the contact section with location-specific options."
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <ToggleRow
+                    name="show_map"
+                    label="Show Map"
+                    hint="Embeds an interactive map in the contact section."
+                    defaultChecked={features.showMap}
+                  />
+                </div>
+              </ModulePanel>
+            ) : (
+              <HiddenField name="show_map" value={features.showMap ? "on" : ""} />
+            )}
+
+            {/* ── Site Utility ─────────────────────────────────────────────── */}
+            <ModulePanel
+              eyebrow="Utility"
+              title="Site Utility"
+              description="Navigation and action elements that appear across the site."
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <ToggleRow
+                  name="show_online_ordering"
+                  label="Online Ordering Links"
+                  hint="Shows ordering CTAs in the header and sticky bar."
+                  defaultChecked={features.showOnlineOrdering}
+                />
+                <ToggleRow
+                  name="show_sticky_mobile_bar"
+                  label="Mobile Action Bar"
+                  hint="Sticky bottom bar on mobile with call, order, and map actions."
+                  defaultChecked={features.showStickyMobileBar}
+                />
+              </div>
+            </ModulePanel>
+
+            {/* ── Save ─────────────────────────────────────────────────────── */}
+            <div style={{ paddingBottom: 16 }}>
+              <PendingSubmitButton label="Save Module Settings" />
+            </div>
+          </form>
         </div>
-
-        <aside className="admin-panel rounded-[1.5rem]">
-          <div className="border-b border-white/[0.07] px-4 py-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-              Operator Notes
-            </p>
-            <h2 className="mt-1 text-[13px] font-medium text-white/80">System guidance</h2>
-          </div>
-
-          <div className="space-y-4 p-4 text-sm text-white/62">
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              The admin edits the live website directly. There is no separate draft layer yet.
-            </div>
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              Photos accept either direct image URLs or uploaded image files.
-            </div>
-            <div className="rounded-[1rem] border border-white/[0.08] bg-black/25 p-4">
-              Admin login protection is still placeholder-level and should be hardened before public exposure.
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <PageLink href="/admin/setup" label="Open Setup Wizard" />
-              <PageLink href="/admin/homepage" label="Manage Homepage" />
-            </div>
-          </div>
-        </aside>
       </div>
     </AdminShell>
+  );
+}
+
+// ─── MODULE PANEL ─────────────────────────────────────────────────────────────
+
+function ModulePanel({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: "var(--admin-surface)",
+        border: "1px solid var(--admin-border)",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: 10,
+          padding: "11px 16px",
+          borderBottom: "1px solid var(--admin-border)",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "ui-monospace, monospace",
+            fontSize: 9,
+            fontWeight: 700,
+            textTransform: "uppercase" as const,
+            letterSpacing: "0.2em",
+            color: "#d97706",
+            flexShrink: 0,
+          }}
+        >
+          {eyebrow}
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--admin-text)",
+          }}
+        >
+          {title}
+        </span>
+        <span
+          style={{
+            marginLeft: "auto",
+            fontSize: 11,
+            color: "var(--admin-text-muted)",
+            whiteSpace: "nowrap" as const,
+          }}
+        >
+          {description}
+        </span>
+      </div>
+      <div style={{ padding: 16 }}>{children}</div>
+    </div>
+  );
+}
+
+// ─── TOGGLE ROW ───────────────────────────────────────────────────────────────
+
+function ToggleRow({
+  name,
+  label,
+  hint,
+  defaultChecked,
+}: {
+  name: string;
+  label: string;
+  hint: string;
+  defaultChecked?: boolean;
+}) {
+  return (
+    <label
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "10px 12px",
+        borderRadius: 8,
+        border: "1px solid var(--admin-border)",
+        background: defaultChecked ? "rgba(217,119,6,0.04)" : "rgba(0,0,0,0.15)",
+        cursor: "pointer",
+        transition: "border-color 0.12s, background 0.12s",
+      }}
+    >
+      <input
+        name={name}
+        type="checkbox"
+        defaultChecked={defaultChecked}
+        style={{
+          width: 15,
+          height: 15,
+          accentColor: "#d97706",
+          flexShrink: 0,
+          cursor: "pointer",
+        }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: "var(--admin-text)",
+            lineHeight: 1.3,
+          }}
+        >
+          {label}
+        </p>
+        <p
+          style={{
+            margin: "2px 0 0",
+            fontSize: 11,
+            color: "var(--admin-text-muted)",
+            lineHeight: 1.4,
+          }}
+        >
+          {hint}
+        </p>
+      </div>
+      {/* On/Off indicator */}
+      <span
+        style={{
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          color: defaultChecked ? "#4ade80" : "var(--admin-text-muted)",
+          flexShrink: 0,
+        }}
+      >
+        {defaultChecked ? "On" : "Off"}
+      </span>
+    </label>
+  );
+}
+
+// ─── MODULE INDEX ITEM ────────────────────────────────────────────────────────
+
+function ModuleIndexItem({
+  modules,
+  moduleKey,
+  label,
+  href,
+}: {
+  modules: KitModules;
+  moduleKey: keyof KitModules;
+  label: string;
+  href: string;
+}) {
+  const enabled = modules[moduleKey] !== false;
+  if (!enabled) return null;
+
+  return (
+    <Link
+      href={href}
+      className="hover:bg-white/[0.04]"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "7px 10px",
+        borderRadius: 7,
+        textDecoration: "none",
+        transition: "background 0.1s",
+      }}
+    >
+      <span
+        style={{
+          width: 5,
+          height: 5,
+          borderRadius: "50%",
+          background: "#4ade80",
+          flexShrink: 0,
+        }}
+      />
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 500,
+          color: "var(--admin-text-muted)",
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          marginLeft: "auto",
+          fontSize: 10,
+          color: "var(--admin-text-muted)",
+          opacity: 0.5,
+        }}
+      >
+        →
+      </span>
+    </Link>
   );
 }

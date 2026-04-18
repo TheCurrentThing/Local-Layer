@@ -1,231 +1,164 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowRight,
-  PencilSimple,
-  Globe,
-  TerminalWindow,
-} from "@phosphor-icons/react";
+import { ArrowDown } from "@phosphor-icons/react";
 
 const steps = [
   {
     step: "01",
-    label: "EDIT",
-    title: "Edit your business",
-    description:
-      "Update your menu, hours, specials, and branding from a single control panel. Every field is live-editable — no rebuilding, no waiting.",
-    details: [
-      "Menu items & pricing",
-      "Opening hours",
-      "Active specials",
-      "Brand & theme",
+    command: "ll edit --live",
+    label: "Edit",
+    headline: "Your business, editable in seconds.",
+    body: "Change your menu, hours, specials, or branding from one control surface. No code. No waiting. Every field is live.",
+    fields: [
+      { key: "menu.special",   val: "Truffle Risotto — $24", status: "pending" },
+      { key: "hours.friday",   val: "17:00 – 23:00",         status: "pending" },
+      { key: "brand.accent",   val: "warm-amber",            status: "pending" },
+      { key: "site.status",    val: "syncing…",              status: "active"  },
     ],
-    icon: PencilSimple,
-    statusLabel: "CHANGES PENDING",
-    statusVariant: "pending" as const,
-    panelLines: [
-      { key: "menu.special", value: "Truffle Risotto — $24" },
-      { key: "hours.friday", value: "17:00 – 23:00" },
-      { key: "brand.accent", value: "warm-amber" },
-    ],
+    signal: { label: "CHANGES PENDING", color: "text-yellow-400 border-yellow-400/30 bg-yellow-400/5" },
   },
   {
     step: "02",
-    label: "PREVIEW",
-    title: "See it live instantly",
-    description:
-      "Changes propagate to your live site in real time. No deploy step. No cache flush. Your customers see the update the moment you save.",
-    details: [
-      "Real-time propagation",
-      "Live site snapshot",
-      "Updated specials",
-      "Current hours",
+    command: "ll push --instant",
+    label: "Propagate",
+    headline: "Live in seconds. No deploy step.",
+    body: "Changes propagate the moment you save. No cache flush. No rebuild cycle. Your customers see it immediately.",
+    fields: [
+      { key: "site.status",    val: "live · synced 0s ago",  status: "active" },
+      { key: "special.active", val: "Truffle Risotto",        status: "ok"     },
+      { key: "hours.now",      val: "Open until 23:00",       status: "ok"     },
+      { key: "latency.ms",     val: "< 200ms",               status: "ok"     },
     ],
-    icon: Globe,
-    statusLabel: "LIVE",
-    statusVariant: "live" as const,
-    panelLines: [
-      { key: "site.status", value: "live · synced 0s ago" },
-      { key: "special.active", value: "Truffle Risotto" },
-      { key: "hours.now", value: "Open until 23:00" },
-    ],
+    signal: { label: "LIVE", color: "text-green-400 border-green-400/30 bg-green-400/5" },
   },
   {
     step: "03",
-    label: "CONTROL",
-    title: "Stay in control",
-    description:
-      "Monitor your site's activity feed, track what's live, and act fast with quick actions — all from one persistent dashboard.",
-    details: [
-      "Activity feed",
-      "Live status rail",
-      "Quick actions",
-      "Change history",
+    command: "ll status --watch",
+    label: "Monitor",
+    headline: "One dashboard. Every change logged.",
+    body: "Activity feed, live status rail, quick actions. You always know what's on your site — and you can change it instantly.",
+    fields: [
+      { key: "activity.last",  val: "Special updated · 2m ago", status: "ok"     },
+      { key: "site.uptime",    val: "99.98%",                   status: "ok"     },
+      { key: "actions.ready",  val: "3 available",              status: "ok"     },
+      { key: "monitor.status", val: "watching",                 status: "active" },
     ],
-    icon: TerminalWindow,
-    statusLabel: "UPDATED",
-    statusVariant: "updated" as const,
-    panelLines: [
-      { key: "activity.last", value: "Special updated · 2m ago" },
-      { key: "site.uptime", value: "99.98%" },
-      { key: "actions.ready", value: "3 quick actions" },
-    ],
+    signal: { label: "UPDATED", color: "text-primary border-primary/30 bg-primary/5" },
   },
 ];
 
-const statusStyles: Record<string, string> = {
-  pending: "bg-accent text-accent-foreground",
-  live: "bg-primary text-primary-foreground",
-  updated: "bg-muted text-foreground border border-border",
+const statusDot: Record<string, string> = {
+  pending: "bg-yellow-400",
+  active:  "bg-primary animate-pulse",
+  ok:      "bg-green-400",
 };
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-muted py-24 px-4 md:px-8">
-      {/* Section header */}
-      <div className="max-w-6xl mx-auto mb-16">
-        <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase mb-3">
-          system / flow
-        </p>
-        <h2 className="font-heading text-3xl md:text-4xl text-foreground leading-tight">
-          How BranchKit works
-        </h2>
-        <p className="mt-3 text-muted-foreground text-base max-w-xl">
-          Three stages. One continuous control flow. Your business stays live
-          and current without the overhead.
-        </p>
-      </div>
-
-      {/* Steps */}
+    <section id="how-it-works" className="bg-background py-24 px-4 md:px-8 border-b border-border">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-0 relative">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <div
-                key={step.step}
-                className="relative flex flex-col md:flex-row"
-              >
-                {/* Panel */}
-                <div className="group flex-1 flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-md transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-primary cursor-default">
-                  {/* Status rail */}
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background/60">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-muted-foreground tracking-widest">
-                        step.{step.step}
+
+        {/* Section header */}
+        <div className="flex flex-col gap-2 mb-16">
+          <span className="font-mono text-[10px] text-muted-foreground tracking-[0.2em] uppercase">
+            03 / system.flow
+          </span>
+          <h2 className="font-heading text-4xl md:text-5xl text-foreground leading-tight tracking-tight">
+            How it works.
+          </h2>
+          <p className="text-muted-foreground text-base max-w-md font-light mt-1">
+            Three stages. One continuous control flow.
+          </p>
+        </div>
+
+        {/* Steps */}
+        <div className="flex flex-col gap-0">
+          {steps.map((step, idx) => (
+            <div key={step.step}>
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-8 py-10 md:py-12">
+
+                {/* Left */}
+                <div className="flex flex-col justify-center gap-5">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-[10px] text-muted-foreground/50 tracking-[0.2em]">
+                        STEP {step.step}
                       </span>
-                      <span className="font-mono text-xs text-muted-foreground opacity-50">
-                        /
-                      </span>
-                      <span className="font-mono text-xs text-muted-foreground tracking-widest uppercase">
-                        {step.label}
+                      <div className="h-px flex-1 bg-border max-w-[48px]" />
+                      <span className={`font-mono text-[10px] px-2 py-0.5 rounded-sm border tracking-[0.15em] ${step.signal.color}`}>
+                        {step.signal.label}
                       </span>
                     </div>
-                    <span
-                      className={`font-mono text-[10px] tracking-widest px-2 py-0.5 rounded-full ${statusStyles[step.statusVariant]}`}
-                    >
-                      {step.statusLabel}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-muted-foreground/50">$</span>
+                      <span className="font-mono text-sm text-primary tracking-wide">{step.command}</span>
+                      <span className="inline-block w-[7px] h-[13px] bg-primary/70 animate-pulse" />
+                    </div>
                   </div>
 
-                  {/* Panel body */}
-                  <div className="flex-1 p-5 flex flex-col gap-4">
-                    {/* Icon + title */}
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 p-2 rounded-lg bg-muted border border-border group-hover:border-primary transition-colors duration-200">
-                        <Icon
-                          weight="duotone"
-                          size={20}
-                          className="text-foreground"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-heading text-lg text-foreground leading-snug">
-                          {step.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Monospace data panel */}
-                    <div className="rounded-lg bg-background border border-border p-3 font-mono text-xs space-y-1.5 group-hover:border-primary/40 transition-colors duration-200">
-                      {step.panelLines.map((line) => (
-                        <div
-                          key={line.key}
-                          className="flex items-baseline gap-2"
-                        >
-                          <span className="text-muted-foreground shrink-0">
-                            {line.key}
-                          </span>
-                          <span className="text-foreground opacity-40 shrink-0">
-                            →
-                          </span>
-                          <span className="text-foreground truncate">
-                            {line.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Detail tags */}
-                    <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-                      {step.details.map((detail) => (
-                        <Badge
-                          key={detail}
-                          variant="outline"
-                          className="font-mono text-[10px] tracking-wide text-muted-foreground border-border px-2 py-0.5 rounded-full"
-                        >
-                          {detail}
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="flex flex-col gap-2">
+                    <h3 className="font-heading text-2xl md:text-3xl text-foreground leading-snug">
+                      {step.headline}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed font-light max-w-xs">
+                      {step.body}
+                    </p>
                   </div>
                 </div>
 
-                {/* Connector arrow between steps (desktop only) */}
-                {index < steps.length - 1 && (
-                  <div className="hidden md:flex items-center justify-center w-8 shrink-0 z-10 relative">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-px flex-1 bg-border" />
-                      <ArrowRight
-                        weight="duotone"
-                        size={16}
-                        className="text-muted-foreground shrink-0"
-                      />
-                      <div className="w-px flex-1 bg-border" />
+                {/* Right: data panel */}
+                <div className="rounded-sm border border-border bg-card overflow-hidden shadow-lg">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/60">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                      <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                      <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
                     </div>
+                    <span className="font-mono text-[10px] text-muted-foreground tracking-[0.15em]">
+                      locallayer / {step.label.toLowerCase()}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground opacity-40">step.{step.step}</span>
                   </div>
-                )}
 
-                {/* Connector for mobile (vertical) */}
-                {index < steps.length - 1 && (
-                  <div className="md:hidden flex justify-center py-3">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="h-4 w-px bg-border" />
-                      <ArrowRight
-                        weight="duotone"
-                        size={14}
-                        className="text-muted-foreground rotate-90"
-                      />
-                      <div className="h-4 w-px bg-border" />
-                    </div>
+                  <div className="px-4 py-4 font-mono text-xs space-y-3">
+                    {step.fields.map((field) => (
+                      <div key={field.key} className="flex items-center gap-3">
+                        <span className={`w-[5px] h-[5px] rounded-full shrink-0 ${statusDot[field.status]}`} />
+                        <span className="text-muted-foreground min-w-[130px] shrink-0 text-[11px]">{field.key}</span>
+                        <span className="text-muted-foreground opacity-30 shrink-0">→</span>
+                        <span className="text-foreground text-[11px] truncate">{field.val}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
+
+                  <div className="px-4 py-2 border-t border-border bg-muted/30 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="font-mono text-[9px] text-muted-foreground tracking-[0.12em] uppercase">
+                      {step.label} · processing
+                    </span>
+                  </div>
+                </div>
+
               </div>
-            );
-          })}
+
+              {idx < steps.length - 1 && (
+                <div className="flex items-center gap-4 py-2">
+                  <div className="flex-1 h-px bg-border/50" />
+                  <ArrowDown weight="thin" size={14} className="text-muted-foreground/30 shrink-0" />
+                  <div className="flex-1 h-px bg-border/50" />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Bottom annotation */}
-        <div className="mt-10 flex items-center justify-center gap-3">
-          <div className="h-px flex-1 max-w-xs bg-border" />
-          <span className="font-mono text-xs text-muted-foreground tracking-widest uppercase">
-            one continuous flow
+        <div className="mt-12 pt-8 border-t border-border flex items-center justify-between">
+          <span className="font-mono text-[10px] text-muted-foreground/50 tracking-[0.15em] uppercase">
+            edit → propagate → monitor
           </span>
-          <div className="h-px flex-1 max-w-xs bg-border" />
+          <span className="font-mono text-[10px] text-muted-foreground/50 tracking-[0.15em] uppercase">
+            your-name.locallayer.app
+          </span>
         </div>
       </div>
     </section>

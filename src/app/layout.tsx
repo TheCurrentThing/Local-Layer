@@ -1,38 +1,19 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
-import { buildBrandCssVariables } from "@/lib/brand";
-import { getBrandFontVariableClassNames } from "@/lib/font-registry";
-import { getSitePayload } from "@/lib/queries";
-import { getThemePresetById } from "@/lib/theme";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const payload = await getSitePayload();
+export const metadata: Metadata = {
+  title: "Local Layer — Your business. Live. Under control.",
+  description: "Update your menu, specials, hours, and branding in real time — without rebuilding your website.",
+};
 
-  return {
-    title: `${payload.brand.businessName} | Local Restaurant Website System`,
-    description: payload.brand.tagline,
-  };
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const payload = await getSitePayload();
-  const fontClassNames = getBrandFontVariableClassNames(
-    payload.brand,
-    getThemePresetById(payload.brand.themePresetId).fonts,
-  );
-
   return (
     <html lang="en">
-      <body
-        className={fontClassNames}
-        style={buildBrandCssVariables(payload.brand)}
-      >
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

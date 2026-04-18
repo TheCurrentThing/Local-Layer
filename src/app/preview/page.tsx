@@ -1,17 +1,10 @@
-import { AboutSection } from "@/components/sections/AboutSection";
-import { ContactSection } from "@/components/sections/ContactSection";
-import { FeaturedMenuSection } from "@/components/sections/FeaturedMenuSection";
-import { GallerySection } from "@/components/sections/GallerySection";
-import { HeroSection } from "@/components/sections/HeroSection";
-import { MenuPreviewSection } from "@/components/sections/MenuPreviewSection";
-import { QuickInfoBar } from "@/components/sections/QuickInfoBar";
-import { SpecialsSection } from "@/components/sections/SpecialsSection";
-import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
+export const dynamic = "force-dynamic";
+
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
-import { LocalBusinessJsonLd } from "@/components/layout/LocalBusinessJsonLd";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { StickyMobileBar } from "@/components/layout/StickyMobileBar";
+import { SiteRenderer } from "@/renderers/SiteRenderer";
 import { buildBrandCssVariables } from "@/lib/brand";
 import {
   fontPackToFontStacks,
@@ -98,60 +91,21 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
     getThemePresetById(previewBrand.themePresetId).fonts,
   );
 
+  // Merge the brand override into a preview-only payload so the renderer
+  // sees the correct brand without needing a separate prop.
+  const previewPayload: SitePayload = { ...payload, brand: previewBrand };
+
   return (
     <div
       className={`${previewFontClassNames} min-h-screen pb-24 md:pb-0`}
       style={buildBrandCssVariables(previewBrand)}
     >
-      <LocalBusinessJsonLd brand={previewBrand} hours={payload.hours} />
       <div className="sticky top-0 z-50">
         <AnnouncementBar settings={payload.settings} />
         <SiteHeader brand={previewBrand} basePath="/preview" />
       </div>
       <main>
-        <HeroSection
-          brand={previewBrand}
-          settings={payload.settings}
-          homePage={payload.homePage}
-        />
-        <QuickInfoBar
-          brand={previewBrand}
-          settings={payload.settings}
-          hours={payload.hours}
-        />
-        {payload.features.showSpecials ? (
-          <SpecialsSection
-            specials={payload.specials}
-            intro={payload.homePage.specialsIntro}
-          />
-        ) : null}
-        <FeaturedMenuSection
-          categories={payload.menuCategories}
-          title={payload.homePage.featuredMenuTitle}
-          intro={payload.homePage.featuredMenuIntro}
-        />
-        <MenuPreviewSection
-          categories={payload.menuCategories}
-          title={payload.homePage.menuPreviewTitle}
-          subtitle={payload.homePage.menuPreviewSubtitle}
-        />
-        <AboutSection about={payload.aboutPage} />
-        {payload.features.showGallery ? (
-          <GallerySection
-            images={payload.galleryImages}
-            title={payload.homePage.galleryTitle}
-            subtitle={payload.homePage.gallerySubtitle}
-          />
-        ) : null}
-        {payload.features.showTestimonials ? (
-          <TestimonialsSection testimonials={payload.testimonials} />
-        ) : null}
-        <ContactSection
-          brand={previewBrand}
-          hours={payload.hours}
-          title={payload.homePage.contactTitle}
-          subtitle={payload.homePage.contactSubtitle}
-        />
+        <SiteRenderer payload={previewPayload} basePath="/preview" />
       </main>
       <SiteFooter brand={previewBrand} hours={payload.hours} />
       <StickyMobileBar brand={previewBrand} features={payload.features} basePath="/preview" />

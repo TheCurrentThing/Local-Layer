@@ -289,6 +289,7 @@ export default async function AdminSetupPage({ searchParams }: AdminPageProps) {
       eyebrow="Setup Sequence"
       title="Setup Wizard"
       description="Guide the restaurant through the base launch configuration without leaving the control system."
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <AdminFeedback searchParams={searchParams} />

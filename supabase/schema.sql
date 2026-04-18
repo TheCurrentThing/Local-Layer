@@ -1,5 +1,27 @@
+-- ============================================================
+-- BranchKit Multi-Tenant Schema
+-- Every tenant-owned table is tied to a businesses row.
+-- Run this for fresh installations.
+-- For existing single-tenant instances, run migrations/001_add_multi_tenancy.sql first.
+-- ============================================================
+
+-- ─── BUSINESSES ─────────────────────────────────────────────────────────────
+create table if not exists businesses (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  is_active boolean not null default true,
+  site_status text not null default 'draft' check (site_status in ('draft', 'ready', 'live', 'paused')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists businesses_site_status_idx on businesses (site_status);
+
+-- ─── BUSINESS SETTINGS ──────────────────────────────────────────────────────
 create table if not exists business_settings (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   business_name text not null,
   tagline text not null,
   logo_url text,
@@ -44,47 +66,12 @@ create table if not exists business_settings (
   updated_at timestamptz not null default now()
 );
 
-alter table if exists business_settings
-  add column if not exists header_logo_alignment text not null default 'center';
+create index if not exists business_settings_business_id_idx on business_settings (business_id);
 
-alter table if exists business_settings
-  add column if not exists theme_mode text not null default 'preset';
-
-alter table if exists business_settings
-  add column if not exists theme_preset_id text default 'classic-diner';
-
-alter table if exists business_settings
-  add column if not exists theme_tokens jsonb not null default '{}'::jsonb;
-
-alter table if exists business_settings
-  add column if not exists background_color text not null default '#f8f1e8';
-
-alter table if exists business_settings
-  add column if not exists foreground_color text not null default '#2c251f';
-
-alter table if exists business_settings
-  add column if not exists card_color text not null default '#fffaf4';
-
-alter table if exists business_settings
-  add column if not exists muted_section_color text not null default '#efe4d7';
-
-alter table if exists business_settings
-  add column if not exists highlight_section_color text not null default '#f3e1ab';
-
-alter table if exists business_settings
-  add column if not exists header_background_color text not null default '#f6efe6';
-
-alter table if exists business_settings
-  add column if not exists announcement_background_color text not null default '#f3e7d3';
-
-alter table if exists business_settings
-  add column if not exists announcement_text_color text not null default '#a53c2f';
-
-alter table if exists business_settings
-  add column if not exists border_color text not null default '#d9c7b5';
-
+-- ─── ANNOUNCEMENTS ──────────────────────────────────────────────────────────
 create table if not exists announcements (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   title text not null,
   body text not null,
   is_active boolean not null default true,
@@ -95,8 +82,12 @@ create table if not exists announcements (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists announcements_business_id_idx on announcements (business_id);
+
+-- ─── HOMEPAGE CONTENT ───────────────────────────────────────────────────────
 create table if not exists homepage_content (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   hero_eyebrow text not null,
   hero_headline text not null,
   hero_subheadline text not null,
@@ -119,8 +110,12 @@ create table if not exists homepage_content (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists homepage_content_business_id_idx on homepage_content (business_id);
+
+-- ─── BUSINESS HOURS ─────────────────────────────────────────────────────────
 create table if not exists business_hours (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   day_label text not null,
   open_text text not null,
   sort_order integer not null default 0,
@@ -129,8 +124,12 @@ create table if not exists business_hours (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists business_hours_business_id_idx on business_hours (business_id);
+
+-- ─── SPECIALS ───────────────────────────────────────────────────────────────
 create table if not exists specials (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   title text not null,
   description text not null,
   price numeric(10,2),
@@ -142,20 +141,30 @@ create table if not exists specials (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists specials_business_id_idx on specials (business_id);
+
+-- ─── MENU CATEGORIES ────────────────────────────────────────────────────────
+-- slug is unique per business (not globally) so two businesses can both have "lunch"
 create table if not exists menu_categories (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   name text not null,
-  slug text not null unique,
+  slug text not null,
   description text,
   service_window text,
   is_active boolean not null default true,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint menu_categories_business_slug_unique unique (business_id, slug)
 );
 
+create index if not exists menu_categories_business_id_idx on menu_categories (business_id);
+
+-- ─── MENU ITEMS ─────────────────────────────────────────────────────────────
 create table if not exists menu_items (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   category_id uuid not null references menu_categories(id) on delete cascade,
   name text not null,
   description text not null,
@@ -169,8 +178,13 @@ create table if not exists menu_items (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists menu_items_business_id_idx on menu_items (business_id);
+create index if not exists menu_items_category_id_idx on menu_items (category_id);
+
+-- ─── GALLERY IMAGES ─────────────────────────────────────────────────────────
 create table if not exists gallery_images (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
   src text not null,
   alt text not null,
   sort_order integer not null default 0,
@@ -179,8 +193,12 @@ create table if not exists gallery_images (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists gallery_images_business_id_idx on gallery_images (business_id);
+
+-- ─── PAGE VIEWS ─────────────────────────────────────────────────────────────
 create table if not exists page_views (
   id uuid primary key default gen_random_uuid(),
+  business_id uuid references businesses(id) on delete cascade,
   path text not null,
   referrer text,
   created_at timestamptz not null default now()
@@ -188,3 +206,26 @@ create table if not exists page_views (
 
 create index if not exists page_views_created_at_idx on page_views (created_at desc);
 create index if not exists page_views_path_idx on page_views (path);
+create index if not exists page_views_business_id_idx on page_views (business_id);
+
+-- ─── BUSINESS DOMAINS ────────────────────────────────────────────────────────
+-- One business may have multiple custom domains; one can be marked primary.
+-- Status flow: pending → verified → active (or failed on check failure).
+-- Public resolver only routes 'active' domains for 'live' businesses.
+create table if not exists business_domains (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references businesses(id) on delete cascade,
+  domain text not null unique,
+  is_primary boolean not null default false,
+  status text not null default 'pending' check (status in ('pending', 'verified', 'active', 'failed')),
+  verification_token text,
+  verified_at timestamptz,
+  last_checked_at timestamptz,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists business_domains_domain_idx on business_domains (domain);
+create index if not exists business_domains_business_id_idx on business_domains (business_id);
+create index if not exists business_domains_status_idx on business_domains (status);

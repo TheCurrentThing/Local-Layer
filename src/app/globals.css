@@ -1,6 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Landing / kit design-system tokens (dark theme) ── */
+:root {
+  --background: 0 0% 7%;
+  --foreground: 35 35% 93%;
+  --card: 24 11% 9%;
+  --card-foreground: 35 35% 93%;
+  --popover: 24 11% 9%;
+  --popover-foreground: 35 35% 93%;
+  --primary: 29 50% 55%;
+  --primary-foreground: 24 11% 9%;
+  --secondary: 0 0% 7%;
+  --secondary-foreground: 35 35% 93%;
+  --muted: 0 0% 7%;
+  --muted-foreground: 31 14% 68%;
+  --accent: 27 12% 15%;
+  --accent-foreground: 35 35% 93%;
+  --destructive: 0 31% 48%;
+  --destructive-foreground: 24 11% 9%;
+  --border: 23 13% 20%;
+  --input: 23 13% 20%;
+  --ring: 29 50% 55%;
+  --radius: 0.5rem;
+  --font-heading: 'EB Garamond', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
 
 :root {
   --color-background: #f6efe6;
@@ -38,13 +67,73 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--color-background);
-  color: var(--color-text);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-body);
 }
 
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
+
+/* ─────────────────────────────────────────────────────
+   ADMIN THEME TOKENS — dark defaults
+   Override with [data-admin-theme="light"] for light mode.
+───────────────────────────────────────────────────── */
+:root {
+  --admin-bg:             #0c0c0e;
+  --admin-chrome:         #0d0d10;
+  --admin-chrome-border:  rgba(255,255,255,0.05);
+  --admin-text:           #e2e0d8;
+  --admin-text-muted:     #55555e;
+  --admin-text-dim:       #3a3a42;
+  --admin-panel-bg:       rgba(255,255,255,0.012);
+  --admin-panel-border:   rgba(255,255,255,0.04);
+  --admin-row-border:     rgba(255,255,255,0.04);
+  --admin-hover-bg:       rgba(255,255,255,0.025);
+  --admin-input-bg:       rgba(255,255,255,0.035);
+  --admin-input-border:   rgba(255,255,255,0.07);
+  --admin-input-text:     #e2e0d8;
+  --admin-input-placeholder: #3a3a42;
+  --admin-ghost-bg:       rgba(255,255,255,0.035);
+  --admin-ghost-border:   rgba(255,255,255,0.07);
+  --admin-ghost-text:     #8a8894;
+  --admin-ghost-hover-bg: rgba(255,255,255,0.065);
+  --admin-ghost-hover-border: rgba(255,255,255,0.11);
+  --admin-ghost-hover-text: #aeacb6;
+  --admin-label-upper:    #5a5a64;
+  --admin-label-upper-dim:#3e3e46;
+  --admin-section-label:  #3e3e48;
+  --admin-scrollbar:      #252528;
+  --admin-scrollbar-hover:#35353a;
+}
+
+[data-admin-theme="light"] {
+  --admin-bg:             #f0f0f3;
+  --admin-chrome:         #ffffff;
+  --admin-chrome-border:  rgba(0,0,0,0.07);
+  --admin-text:           #1a1a24;
+  --admin-text-muted:     #6b6b7a;
+  --admin-text-dim:       #9090a0;
+  --admin-panel-bg:       rgba(0,0,0,0.025);
+  --admin-panel-border:   rgba(0,0,0,0.07);
+  --admin-row-border:     rgba(0,0,0,0.06);
+  --admin-hover-bg:       rgba(0,0,0,0.04);
+  --admin-input-bg:       rgba(0,0,0,0.04);
+  --admin-input-border:   rgba(0,0,0,0.12);
+  --admin-input-text:     #1a1a24;
+  --admin-input-placeholder: #b0b0c0;
+  --admin-ghost-bg:       rgba(0,0,0,0.04);
+  --admin-ghost-border:   rgba(0,0,0,0.1);
+  --admin-ghost-text:     #6b6b7a;
+  --admin-ghost-hover-bg: rgba(0,0,0,0.07);
+  --admin-ghost-hover-border: rgba(0,0,0,0.15);
+  --admin-ghost-hover-text: #3a3a4a;
+  --admin-label-upper:    #7a7a8a;
+  --admin-label-upper-dim:#a0a0b0;
+  --admin-section-label:  #9090a2;
+  --admin-scrollbar:      #c8c8d2;
+  --admin-scrollbar-hover:#a8a8b8;
+}
 
 /* ─────────────────────────────────────────────────────
    ANIMA ADMIN DESIGN SYSTEM
@@ -55,13 +144,13 @@ img { display: block; max-width: 100%; }
 /* ── Scrollbars ── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #252528; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #35353a; }
+::-webkit-scrollbar-thumb { background: var(--admin-scrollbar, #252528); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--admin-scrollbar-hover, #35353a); }
 
 /* ── Panel system ── */
 .panel {
-  background: rgba(255,255,255,0.012);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: var(--admin-panel-bg);
+  border: 1px solid var(--admin-panel-border);
   border-radius: 10px;
 }
 .panel-header {
@@ -69,7 +158,7 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.045);
+  border-bottom: 1px solid var(--admin-panel-border);
   flex-shrink: 0;
 }
 .panel-row {
@@ -77,11 +166,11 @@ img { display: block; max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--admin-row-border);
   transition: background 0.12s;
 }
 .panel-row:last-child { border-bottom: none; }
-.panel-row:hover { background: rgba(255,255,255,0.025); }
+.panel-row:hover { background: var(--admin-hover-bg); }
 .panel-row.active { background: rgba(217,119,6,0.07); }
 
 /* ── Typography utilities ── */
@@ -90,21 +179,21 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: #5a5a64;
+  color: var(--admin-label-upper);
 }
 .label-upper-dim {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: #3e3e46;
+  color: var(--admin-label-upper-dim);
 }
 .section-label {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #3e3e48;
+  color: var(--admin-section-label);
   display: block;
   margin-bottom: 6px;
   padding-left: 2px;
@@ -114,17 +203,17 @@ img { display: block; max-width: 100%; }
 .ctrl-input {
   width: 100%;
   padding: 8px 12px;
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--admin-input-bg);
+  border: 1px solid var(--admin-input-border);
   border-radius: 7px;
-  color: #e2e0d8;
+  color: var(--admin-input-text);
   font-size: 13px;
   outline: none;
   transition: border-color 0.15s;
   font-family: inherit;
 }
 .ctrl-input:focus { border-color: rgba(217,119,6,0.4); }
-.ctrl-input::placeholder { color: #3a3a42; }
+.ctrl-input::placeholder { color: var(--admin-input-placeholder); }
 
 /* ── Buttons ── */
 .btn-primary {
@@ -157,16 +246,16 @@ img { display: block; max-width: 100%; }
   font-weight: 500;
   letter-spacing: 0.07em;
   cursor: pointer;
-  background: rgba(255,255,255,0.035);
-  color: #8a8894;
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--admin-ghost-bg);
+  color: var(--admin-ghost-text);
+  border: 1px solid var(--admin-ghost-border);
   transition: background 0.12s, border-color 0.12s, color 0.12s;
   font-family: inherit;
 }
 .btn-ghost:hover {
-  background: rgba(255,255,255,0.065);
-  border-color: rgba(255,255,255,0.11);
-  color: #aeacb6;
+  background: var(--admin-ghost-hover-bg);
+  border-color: var(--admin-ghost-hover-border);
+  color: var(--admin-ghost-hover-text);
 }
 
 .btn-danger {
@@ -268,7 +357,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    LEGACY ADMIN CLASSES (kept for non-Anima pages)
 ───────────────────────────────────────────────────── */
 @layer components {
-  .admin-terminal-shell { background: #0c0c0e; }
+  .admin-terminal-shell { background: var(--admin-bg); }
   .admin-grid-bg { background-image: none; }
 
   .admin-panel {
@@ -310,8 +399,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     bottom: 0; left: 0; right: 0;
     height: 60px;
     z-index: 100;
-    background: #0d0d10;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--admin-chrome);
+    border-top: 1px solid var(--admin-chrome-border);
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;

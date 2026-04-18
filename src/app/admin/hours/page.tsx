@@ -20,6 +20,7 @@ export default async function AdminHoursPage() {
       eyebrow="Hours"
       title="Hours Manager"
       previewHref="/preview"
+      liveHref={payload.businessSlug ? `/${payload.businessSlug}` : undefined}
       contentClassName="min-h-0 flex flex-1 flex-col overflow-hidden"
     >
       <HoursEditorClient
