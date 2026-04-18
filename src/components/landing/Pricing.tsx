@@ -24,7 +24,7 @@ const PLAN_CARDS: PlanCard[] = [
     slug: "trial",
     name: "Free Trial",
     price: "Free",
-    tagline: "90 days to try the full platform.",
+    tagline: "10 days to try the full platform.",
     bullets: [
       "Site live immediately",
       "Access to premium features",
@@ -290,7 +290,7 @@ function getUpgradeOptions(display: SubscriptionDisplayState): UpgradeOption[] {
 
 function PricingLoggedIn({ display }: { display: SubscriptionDisplayState }) {
   const upgradeOptions = getUpgradeOptions(display);
-  const showTrialWarning = display.isOnTrial && display.trialDaysRemaining !== null && display.trialDaysRemaining <= 30;
+  const showTrialWarning = display.isOnTrial && display.trialDaysRemaining !== null && display.trialDaysRemaining <= 5;
 
   const statusColor =
     display.isCanceled ? "#6b7280"

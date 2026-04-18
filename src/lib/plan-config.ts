@@ -4,7 +4,7 @@
 // business is on — the capabilities of that plan live here.
 //
 // Plan hierarchy:
-//   trial    → 90-day onboarding. Broad access to evaluate the platform.
+//   trial    → 10-day onboarding. Broad access to evaluate the platform.
 //   starter  → $5/mo retention plan. "Keep your business live." No premium features.
 //   core     → $19/mo. Real operating tier. Custom domain + Google sync.
 //   pro      → $79/mo. Premium tier. Signature renderer, domain purchase, storage.
@@ -21,7 +21,7 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
     name: "Trial",
     monthlyPrice: 0,
     yearlyPrice: 0,
-    description: "90-day free trial. Full access to evaluate LocalLayer for your business.",
+    description: "10-day free trial. Full access to evaluate LocalLayer for your business.",
     retentionNote: "Your trial gives you access to premium features — choose a plan to keep them.",
     entitlements: [
       "site_live",

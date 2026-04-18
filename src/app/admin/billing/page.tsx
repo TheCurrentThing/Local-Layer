@@ -86,7 +86,7 @@ export default async function AdminBillingPage() {
   const { businessSlug } = payload;
 
   // Warning states
-  const trialEndingSoon = display.isOnTrial && display.trialDaysRemaining !== null && display.trialDaysRemaining <= 30;
+  const trialEndingSoon = display.isOnTrial && display.trialDaysRemaining !== null && display.trialDaysRemaining <= 5;
   const trialEnding7 = display.isOnTrial && display.trialDaysRemaining !== null && display.trialDaysRemaining <= 7;
   const showPastDueWarning = display.isPastDue;
   const showCancelWarning = display.cancelAtPeriodEnd && !display.isCanceled;

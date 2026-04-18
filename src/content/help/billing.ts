@@ -14,7 +14,7 @@ export const billing: HelpCategoryMeta = {
         {
           type: "steps",
           items: [
-            "Free Trial — 90 days free. Full access to evaluate the platform, including premium features.",
+            "Free Trial — 10 days free. Full access to evaluate the platform, including premium features.",
             "Starter ($5/mo) — Keep your business live. Site stays online, content preserved. No premium features.",
             "Core ($19/mo) — The full operating tier. Custom domain and Google Business sync included.",
             "Pro ($79/mo) — Everything in Core, plus Signature renderer, domain purchase, and extended storage.",
@@ -36,11 +36,11 @@ export const billing: HelpCategoryMeta = {
     {
       id: "trial-plan",
       title: "How does the free trial work?",
-      summary: "Your trial gives you 90 days of broad platform access to evaluate LocalLayer.",
+      summary: "Your trial gives you 10 days of broad platform access to evaluate LocalLayer.",
       blocks: [
         {
           type: "paragraph",
-          text: "When you start on LocalLayer, you get a 90-day free trial. During this period you have access to most of the platform — including custom domain, Google sync, and the Signature renderer — so you can properly evaluate what LocalLayer can do for your business.",
+          text: "When you start on LocalLayer, you get a 10-day free trial. During this period you have access to most of the platform — including custom domain, Google sync, and the Signature renderer — so you can properly evaluate what LocalLayer can do for your business.",
         },
         {
           type: "paragraph",
