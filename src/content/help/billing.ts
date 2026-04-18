@@ -15,8 +15,8 @@ export const billing: HelpCategoryMeta = {
           type: "steps",
           items: [
             "Free Trial — 10 days free. Full access to evaluate the platform, including premium features.",
-            "Starter ($5/mo) — Keep your business live. Site stays online, content preserved. No premium features.",
-            "Core ($19/mo) — The full operating tier. Custom domain and Google Business sync included.",
+            "Starter ($19.99/mo) — Keep your business live. Site stays online, content preserved. No premium features.",
+            "Core ($39.99/mo) — The full operating tier. Custom domain and Google Business sync included.",
             "Pro ($79/mo) — Everything in Core, plus Signature renderer, domain purchase, and extended storage.",
             "Enterprise — Custom pricing for multi-location or high-volume businesses.",
           ],
@@ -44,7 +44,7 @@ export const billing: HelpCategoryMeta = {
         },
         {
           type: "paragraph",
-          text: "When your trial ends, you choose a plan. Starter keeps your site live for $5/month. Core and Pro unlock the premium features you tried during the trial.",
+          text: "When your trial ends, you choose a plan. Starter keeps your site live for $19.99/month. Core and Pro unlock the premium features you tried during the trial.",
         },
         {
           type: "tip",
@@ -59,7 +59,7 @@ export const billing: HelpCategoryMeta = {
       blocks: [
         {
           type: "paragraph",
-          text: "The Starter plan ($5/month) is designed for one purpose: keeping your business online. Your site stays live at your LocalLayer subdomain, all your content is preserved, and you can upgrade to Core or Pro anytime.",
+          text: "The Starter plan ($19.99/month) is designed for one purpose: keeping your business online. Your site stays live at your LocalLayer subdomain, all your content is preserved, and you can upgrade to Core or Pro anytime.",
         },
         {
           type: "paragraph",

@@ -45,7 +45,7 @@ export function CancelFlow({
         >
           <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--admin-border)", background: "rgba(255,255,255,0.02)" }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--admin-text)" }}>
-              Switch to Starter — $5/month
+              Switch to Starter — $19.99/month
             </p>
             <p style={{ margin: "3px 0 0", fontSize: 11.5, color: "var(--admin-text-muted)" }}>
               Your site stays live. Your content is preserved.
@@ -208,7 +208,7 @@ export function CancelFlow({
           }}
         >
           <p style={{ margin: 0, fontSize: 12, color: "var(--admin-text-muted)", flex: 1, lineHeight: 1.5 }}>
-            Changed your mind? <strong style={{ color: "var(--admin-text)" }}>Starter keeps your site live for $5/month.</strong>
+            Changed your mind? <strong style={{ color: "var(--admin-text)" }}>Starter keeps your site live for $19.99/month.</strong>
           </p>
           <button
             onClick={() => setStep("confirm-starter")}
@@ -287,7 +287,7 @@ export function CancelFlow({
         <p style={{ margin: 0, fontSize: 13, color: "var(--admin-text)", lineHeight: 1.7 }}>
           You&apos;re currently on the{" "}
           <strong style={{ color: "var(--admin-text)" }}>{currentPlanName} plan</strong>.
-          {" "}Before you make any changes, consider whether Starter is the right fit — it keeps your site live for just $5/month.
+          {" "}Before you make any changes, consider whether Starter is the right fit — it keeps your site live for just $19.99/month.
         </p>
       </div>
 
@@ -335,7 +335,7 @@ export function CancelFlow({
               Keep My Site Live
             </p>
             <p style={{ margin: "3px 0 0", fontSize: 13, color: "#d97706", fontWeight: 600 }}>
-              Starter — $5/month
+              Starter — $19.99/month
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>

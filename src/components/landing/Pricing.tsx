@@ -37,7 +37,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     slug: "starter",
     name: "Starter",
-    price: "$5",
+    price: "$19.99",
     interval: "/mo",
     tagline: "Keep your business live.",
     bullets: [
@@ -51,7 +51,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     slug: "core",
     name: "Core",
-    price: "$19",
+    price: "$39.99",
     interval: "/mo",
     tagline: "The full operating tier.",
     bullets: [
@@ -210,7 +210,7 @@ function getUpgradeOptions(display: SubscriptionDisplayState): UpgradeOption[] {
         {
           planName: "Starter",
           planSlug: "starter",
-          price: "$5/mo",
+          price: "$19.99/mo",
           headline: "Keep your site live",
           bullets: ["Site stays online", "Content preserved", "Upgrade anytime"],
           ctaLabel: "Switch to Starter",
@@ -219,7 +219,7 @@ function getUpgradeOptions(display: SubscriptionDisplayState): UpgradeOption[] {
         {
           planName: "Core",
           planSlug: "core",
-          price: "$19/mo",
+          price: "$39.99/mo",
           headline: "Custom domain + Google sync",
           bullets: ["Connect your domain", "Google Business sync", "All modules"],
           ctaLabel: "Upgrade to Core",
@@ -241,7 +241,7 @@ function getUpgradeOptions(display: SubscriptionDisplayState): UpgradeOption[] {
         {
           planName: "Core",
           planSlug: "core",
-          price: "$19/mo",
+          price: "$39.99/mo",
           headline: "Ready to grow?",
           bullets: ["Custom domain", "Google Business sync", "Full module access"],
           ctaLabel: "Upgrade to Core",

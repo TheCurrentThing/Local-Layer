@@ -5,8 +5,8 @@
 //
 // Plan hierarchy:
 //   trial    → 10-day onboarding. Broad access to evaluate the platform.
-//   starter  → $5/mo retention plan. "Keep your business live." No premium features.
-//   core     → $19/mo. Real operating tier. Custom domain + Google sync.
+//   starter  → $19.99/mo retention plan. "Keep your business live." No premium features.
+//   core     → $39.99/mo. Real operating tier. Custom domain + Google sync.
 //   pro      → $79/mo. Premium tier. Signature renderer, domain purchase, storage.
 //   enterprise → Custom. Multi-location / agency.
 //
@@ -34,8 +34,8 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
   starter: {
     slug: "starter",
     name: "Starter",
-    monthlyPrice: 5,
-    yearlyPrice: 50,
+    monthlyPrice: 19.99,
+    yearlyPrice: 199,
     description: "Keep your business live online. Your site, your content, your subdomain.",
     retentionNote: "Your site stays live, your content is preserved, and you can upgrade anytime.",
     entitlements: [
@@ -46,8 +46,8 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
   core: {
     slug: "core",
     name: "Core",
-    monthlyPrice: 19,
-    yearlyPrice: 190,
+    monthlyPrice: 39.99,
+    yearlyPrice: 399,
     description: "The full operating tier. Custom domain, Google sync, and everything you need to run your business online.",
     entitlements: [
       "site_live",

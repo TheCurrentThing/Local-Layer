@@ -171,7 +171,7 @@ export default async function AdminBillingPage() {
               )}
               {display.isOnStarter && !display.isCanceled && (
                 <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--admin-text-muted)" }}>
-                  $5/month
+                  $19.99/month
                 </p>
               )}
             </div>
@@ -339,7 +339,7 @@ export default async function AdminBillingPage() {
                       : `Your trial ends in ${display.trialDaysRemaining} days.`}
                   </p>
                   <p style={{ margin: 0, fontSize: 12, color: "var(--admin-text-muted)", lineHeight: 1.6 }}>
-                    Choose a plan to keep your site live. Starter keeps your business online for just $5/month. Core and Pro unlock premium features.
+                    Choose a plan to keep your site live. Starter keeps your business online for just $19.99/month. Core and Pro unlock premium features.
                   </p>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <a
@@ -566,8 +566,8 @@ export default async function AdminBillingPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <p style={{ margin: 0, fontSize: 12, color: "var(--admin-text-muted)", lineHeight: 1.6 }}>
                     {display.isOnTrial
-                      ? "Your trial includes premium features. Choose Core or Pro to keep them — or Starter to stay live for just $5/month."
-                      : "Upgrade to Core ($19/mo) to unlock custom domain and Google sync, or Pro ($79/mo) for the full platform."}
+                      ? "Your trial includes premium features. Choose Core or Pro to keep them — or Starter to stay live for just $19.99/month."
+                      : "Upgrade to Core ($39.99/mo) to unlock custom domain and Google sync, or Pro ($79/mo) for the full platform."}
                   </p>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <a
