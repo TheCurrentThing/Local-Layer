@@ -35,17 +35,21 @@ export default async function OnboardingPage() {
       if (user) {
         // Authenticated — check whether they already have a configured business.
         const db = createSupabaseAdminClient();
-        const hasBusiness = db
-          ? (
-              await db
-                .from("businesses")
-                .select("id")
-                .eq("is_active", true)
-                .eq("onboarding_complete", true)
-                .limit(1)
-                .maybeSingle<{ id: string }>()
-            ).data !== null
-          : false;
+        const envId = process.env.LOCALLAYER_BUSINESS_ID;
+        let hasBusiness = false;
+        if (db) {
+          const baseQuery = db
+            .from("businesses")
+            .select("id")
+            .eq("is_active", true)
+            .eq("onboarding_complete", true)
+            .limit(1);
+          const { data } = await (envId
+            ? baseQuery.eq("id", envId)
+            : baseQuery
+          ).maybeSingle<{ id: string }>();
+          hasBusiness = data !== null;
+        }
 
         if (hasBusiness) {
           // Fully configured — send to dashboard.

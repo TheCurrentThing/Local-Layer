@@ -34,33 +34,38 @@ const themeScript = `
 //   All businesses that existed before migration 012 inherit DEFAULT true.
 
 async function getOnboardingGuardResult(): Promise<"allow" | "redirect_onboarding"> {
-  // Pre-configured via env var — trust it, skip the DB check.
-  if (process.env.LOCALLAYER_BUSINESS_ID) return "allow";
-
   if (!isSupabaseConfigured()) return "allow";
 
   const supabase = createSupabaseServerClient();
   if (!supabase) return "allow";
 
-  // Check auth state without triggering a middleware-style redirect.
-  // If no user, allow through — the middleware already redirected unauthenticated
-  // users from real admin pages to /admin/login.
+  // If no authenticated user, allow through — middleware handles the login redirect.
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return "allow";
 
-  // Auth'd user — verify they have a configured business.
+  // Auth'd — verify a configured business actually exists in the DB.
+  // Do NOT blindly trust LOCALLAYER_BUSINESS_ID: if the DB was reset the pinned
+  // business may no longer exist, and a new user shouldn't bypass onboarding.
   const db = createSupabaseAdminClient();
   if (!db) return "allow";
 
-  const { data: biz } = await db
+  const envId = process.env.LOCALLAYER_BUSINESS_ID;
+
+  // If the env var pins a specific business, check that exact row.
+  // Otherwise check for any active + complete business.
+  const baseQuery = db
     .from("businesses")
     .select("id")
     .eq("is_active", true)
     .eq("onboarding_complete", true)
-    .limit(1)
-    .maybeSingle<{ id: string }>();
+    .limit(1);
+
+  const { data: biz } = await (envId
+    ? baseQuery.eq("id", envId)
+    : baseQuery
+  ).maybeSingle<{ id: string }>();
 
   return biz ? "allow" : "redirect_onboarding";
 }
