@@ -58,12 +58,13 @@ export type EntitlementSet = Set<EntitlementKey>;
 export interface PlanConfig {
   slug: PlanSlug;
   name: string;
-  monthlyPrice: number | null; // null = custom / contact us
-  yearlyPrice: number | null;
+  monthlyPrice: number | null;       // null = custom / contact us
+  yearlyPrice: number | null;        // monthly * 12 * 0.8 (20% off)
+  yearlyPricePerMonth: number | null; // yearlyPrice / 12, for "X/mo billed annually" display
   description: string;
-  retentionNote?: string;      // shown in downgrade / cancel flow
+  retentionNote?: string;            // shown in downgrade / cancel flow
   entitlements: EntitlementKey[];
-  highlight?: boolean;         // marks the recommended plan in pricing UI
+  highlight?: boolean;               // marks the recommended plan in pricing UI
 }
 
 // ─── BILLING PROVIDER ─────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ export interface SubscriptionDisplayState {
   planName: string;
   planSlug: PlanSlug;
   status: SubscriptionStatus;
+  billingInterval: BillingInterval | null;
   isActive: boolean;
   isOnTrial: boolean;         // on the `trial` plan slug (distinct from trialing status)
   isTrialing: boolean;        // Stripe trialing status

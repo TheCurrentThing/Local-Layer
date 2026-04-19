@@ -7,8 +7,13 @@
 //   trial    → 10-day onboarding. Broad access to evaluate the platform.
 //   starter  → $19.99/mo retention plan. "Keep your business live." No premium features.
 //   core     → $39.99/mo. Real operating tier. Custom domain + Google sync.
-//   pro      → $79/mo. Premium tier. Signature renderer, domain purchase, storage.
+//   pro      → $79.99/mo. Premium tier. Signature renderer, domain purchase, storage.
 //   enterprise → Custom. Multi-location / agency.
+//
+// Yearly prices: monthly * 12 * 0.8 (20% discount), precomputed to avoid runtime drift.
+//   starter: $191.90/yr ($15.99/mo equivalent)
+//   core:    $383.90/yr ($31.99/mo equivalent)
+//   pro:     $767.90/yr ($63.99/mo equivalent)
 //
 // Rule: entitlement checks MUST go through hasEntitlement() in entitlements.ts.
 // Never read plan_slug and manually check capabilities elsewhere.
@@ -21,6 +26,7 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
     name: "Trial",
     monthlyPrice: 0,
     yearlyPrice: 0,
+    yearlyPricePerMonth: null,
     description: "10-day free trial. Full access to evaluate LocalLayer for your business.",
     retentionNote: "Your trial gives you access to premium features — choose a plan to keep them.",
     entitlements: [
@@ -35,7 +41,8 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
     slug: "starter",
     name: "Starter",
     monthlyPrice: 19.99,
-    yearlyPrice: 199,
+    yearlyPrice: 191.90,
+    yearlyPricePerMonth: 15.99,
     description: "Keep your business live online. Your site, your content, your subdomain.",
     retentionNote: "Your site stays live, your content is preserved, and you can upgrade anytime.",
     entitlements: [
@@ -47,7 +54,8 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
     slug: "core",
     name: "Core",
     monthlyPrice: 39.99,
-    yearlyPrice: 399,
+    yearlyPrice: 383.90,
+    yearlyPricePerMonth: 31.99,
     description: "The full operating tier. Custom domain, Google sync, and everything you need to run your business online.",
     entitlements: [
       "site_live",
@@ -60,8 +68,9 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
   pro: {
     slug: "pro",
     name: "Pro",
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    monthlyPrice: 79.99,
+    yearlyPrice: 767.90,
+    yearlyPricePerMonth: 63.99,
     description: "Premium presentation, advanced capabilities, and the full LocalLayer platform.",
     entitlements: [
       "site_live",
@@ -78,6 +87,7 @@ export const PLAN_CONFIGS: Record<PlanSlug, PlanConfig> = {
     name: "Enterprise",
     monthlyPrice: null,
     yearlyPrice: null,
+    yearlyPricePerMonth: null,
     description: "Custom capabilities for multi-location and agency accounts.",
     entitlements: [
       "site_live",

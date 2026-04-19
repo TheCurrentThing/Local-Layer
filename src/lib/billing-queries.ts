@@ -136,6 +136,7 @@ export function deriveDisplayState(
     planName: plan.name,
     planSlug,
     status,
+    billingInterval: subscription?.billingInterval ?? null,
     isActive: status === "active" || status === "trialing",
     isOnTrial: planSlug === "trial",
     isTrialing: status === "trialing",

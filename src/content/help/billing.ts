@@ -17,7 +17,7 @@ export const billing: HelpCategoryMeta = {
             "Free Trial — 10 days free. Full access to evaluate the platform, including premium features.",
             "Starter ($19.99/mo) — Keep your business live. Site stays online, content preserved. No premium features.",
             "Core ($39.99/mo) — The full operating tier. Custom domain and Google Business sync included.",
-            "Pro ($79/mo) — Everything in Core, plus Signature renderer, domain purchase, and extended storage.",
+            "Pro ($79.99/mo) — Everything in Core, plus Signature renderer, domain purchase, and extended storage.",
             "Enterprise — Custom pricing for multi-location or high-volume businesses.",
           ],
         },

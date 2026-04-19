@@ -3,23 +3,32 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Archive,
   ArrowRight,
+  Bag,
+  Briefcase,
+  CalendarCheck,
   Coffee,
   Eye,
   EyeSlash,
   ForkKnife,
+  HardHat,
+  Hourglass,
+  Lightning,
   MapPin,
+  NavigationArrow,
   Palette,
+  Scissors,
+  Star,
   Storefront,
   Truck,
   Wine,
-  Wrench,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 import { signUpOnboardingAction, createOnboardingBusiness } from "./actions";
 import { KITS, KitDefinition } from "./kits";
 import type { KitCategory, KitFamily } from "@/types/kit";
-import { FOOD_SERVICE_CATEGORIES } from "@/lib/kit-config";
+import { FOOD_SERVICE_CATEGORIES, SERVICES_CATEGORIES, RETAIL_PRODUCTS_CATEGORIES } from "@/lib/kit-config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,14 +45,26 @@ interface FlowData {
 // ─── Kit icon map ─────────────────────────────────────────────────────────────
 
 const KIT_ICONS: Record<KitCategory, Icon> = {
-  cafe:       Coffee,
-  diner:      ForkKnife,
-  restaurant: Storefront,
-  pop_up:     MapPin,
-  food_truck: Truck,
-  bar:        Wine,
-  artist:     Palette,
-  trade:      Wrench,
+  // Food Service
+  cafe:         Coffee,
+  diner:        ForkKnife,
+  restaurant:   Storefront,
+  pop_up:       MapPin,
+  food_truck:   Truck,
+  bar:          Wine,
+  // Services — one icon per conversion model
+  on_demand:    Lightning,
+  project:      HardHat,
+  scheduled:    CalendarCheck,
+  professional: Briefcase,
+  mobile:       NavigationArrow,
+  // Retail & Products
+  artist:       Palette,
+  maker:        Scissors,
+  retail:       Bag,
+  brand:        Star,
+  vintage:      Hourglass,
+  collector:    Archive,
 };
 
 // ─── Category groups for Step 3 display ──────────────────────────────────────
@@ -61,14 +82,14 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
     categories: [...FOOD_SERVICE_CATEGORIES],
   },
   {
-    family: "creative",
-    label: "Creative",
-    categories: ["artist"],
-  },
-  {
     family: "services",
     label: "Services",
-    categories: ["trade"],
+    categories: [...SERVICES_CATEGORIES],
+  },
+  {
+    family: "retail_products",
+    label: "Retail & Products",
+    categories: [...RETAIL_PRODUCTS_CATEGORIES],
   },
 ];
 
@@ -264,11 +285,13 @@ function IdentityStep({
   update,
   onNext,
   onBack,
+  showBack = true,
 }: {
   data: FlowData;
   update: (u: Partial<FlowData>) => void;
   onNext: () => void;
   onBack: () => void;
+  showBack?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -322,9 +345,11 @@ function IdentityStep({
           {error && <ErrorBanner message={error} />}
 
           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-            <button type="button" className="btn-ghost" onClick={onBack}>
-              Back
-            </button>
+            {showBack && (
+              <button type="button" className="btn-ghost" onClick={onBack}>
+                Back
+              </button>
+            )}
             <button type="submit" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}>
               Continue
               <ArrowRight size={13} style={{ marginLeft: 4 }} />
@@ -685,9 +710,9 @@ function GenerateStep({
 
 // ─── Main flow controller ─────────────────────────────────────────────────────
 
-export function OnboardingFlow() {
+export function OnboardingFlow({ initialStep = 1 }: { initialStep?: 1 | 2 }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(initialStep as Step);
   const [data, setData] = useState<FlowData>({
     email: "",
     password: "",
@@ -799,7 +824,13 @@ export function OnboardingFlow() {
       >
         {step === 1 && <AccountStep data={data} update={update} onNext={() => setStep(2)} />}
         {step === 2 && (
-          <IdentityStep data={data} update={update} onNext={() => setStep(3)} onBack={() => setStep(1)} />
+          <IdentityStep
+            data={data}
+            update={update}
+            onNext={() => setStep(3)}
+            onBack={() => setStep(1)}
+            showBack={initialStep < 2}
+          />
         )}
         {step === 3 && (
           <KitStep data={data} update={update} onNext={() => setStep(4)} onBack={() => setStep(2)} />

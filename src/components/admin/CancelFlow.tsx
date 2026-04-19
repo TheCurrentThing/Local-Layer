@@ -17,7 +17,7 @@ export function CancelFlow({
 }) {
   const [step, setStep] = useState<Step>("choose");
 
-  const starterMailto = `mailto:hello@locallayer.com?subject=Switch%20to%20Starter%20plan&body=Hi%2C%20I%27d%20like%20to%20switch%20from%20${encodeURIComponent(currentPlanName)}%20to%20the%20Starter%20plan%20(%245%2Fmo).%20Please%20update%20my%20account.`;
+  const starterMailto = `mailto:hello@locallayer.com?subject=Switch%20to%20Starter%20plan&body=Hi%2C%20I%27d%20like%20to%20switch%20from%20${encodeURIComponent(currentPlanName)}%20to%20the%20Starter%20plan%20(%2419.99%2Fmo).%20Please%20update%20my%20account.`;
   const cancelMailto = `mailto:hello@locallayer.com?subject=Cancel%20my%20LocalLayer%20subscription&body=Hi%2C%20I%27d%20like%20to%20cancel%20my%20LocalLayer%20subscription.%20I%20understand%20my%20site%20will%20go%20offline.`;
 
   if (step === "confirm-starter") {

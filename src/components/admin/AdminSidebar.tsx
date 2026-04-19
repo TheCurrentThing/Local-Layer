@@ -4,14 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Briefcase,
+  ChatTeardropText,
   Clock,
   CreditCard,
+  Folders,
   ForkKnife,
   Gear,
   Globe,
   GoogleLogo,
   House,
   ImageSquare,
+  MapTrifold,
+  Package,
   Palette,
   Question,
   RocketLaunch,
@@ -39,16 +44,21 @@ type NavItem = {
 
 // Site management nav — kit-filtered
 const NAV: NavItem[] = [
-  { href: "/admin",          Icon: House,          label: "Overview"  },
-  { href: "/admin/branding", Icon: Palette,        label: "Branding",  moduleKey: "branding"  },
-  { href: "/admin/homepage", Icon: Storefront,     label: "Homepage",  moduleKey: "homepage"  },
-  { href: "/admin/menu",     Icon: ForkKnife,      label: "Menu",      moduleKey: "menu"      },
-  { href: "/admin/specials", Icon: Sparkle,        label: "Specials",  moduleKey: "specials"  },
-  { href: "/admin/hours",    Icon: Clock,          label: "Hours",     moduleKey: "hours"     },
-  { href: "/admin/photos",   Icon: ImageSquare,    label: "Photos",    moduleKey: "photos"    },
-  { href: "/admin/contact",  Icon: Phone,          label: "Contact",   moduleKey: "contact"   },
-  { href: "/admin/launch",   Icon: RocketLaunch,   label: "Launch",    moduleKey: "launch"    },
-  { href: "/admin/google",   Icon: GoogleLogo,     label: "Google",    moduleKey: "google"    },
+  { href: "/admin",                  Icon: House,            label: "Overview"                                  },
+  { href: "/admin/branding",         Icon: Palette,          label: "Branding",       moduleKey: "branding"      },
+  { href: "/admin/homepage",         Icon: Storefront,       label: "Homepage",       moduleKey: "homepage"      },
+  { href: "/admin/menu",             Icon: ForkKnife,        label: "Menu",           moduleKey: "menu"          },
+  { href: "/admin/offerings",        Icon: Briefcase,        label: "Offerings",      moduleKey: "offerings"     },
+  { href: "/admin/products",         Icon: Package,          label: "Products",       moduleKey: "products"      },
+  { href: "/admin/collections",      Icon: Folders,          label: "Collections",    moduleKey: "collections"   },
+  { href: "/admin/specials",         Icon: Sparkle,          label: "Specials",       moduleKey: "specials"      },
+  { href: "/admin/testimonials",     Icon: ChatTeardropText, label: "Testimonials",   moduleKey: "testimonials"  },
+  { href: "/admin/service-areas",    Icon: MapTrifold,       label: "Service Areas",  moduleKey: "service_areas" },
+  { href: "/admin/hours",            Icon: Clock,            label: "Hours",          moduleKey: "hours"         },
+  { href: "/admin/photos",           Icon: ImageSquare,      label: "Photos",         moduleKey: "photos"        },
+  { href: "/admin/contact",          Icon: Phone,            label: "Contact",        moduleKey: "contact"       },
+  { href: "/admin/launch",           Icon: RocketLaunch,     label: "Launch",         moduleKey: "launch"        },
+  { href: "/admin/google",           Icon: GoogleLogo,       label: "Google",         moduleKey: "google"        },
 ];
 
 // Platform / account nav — always visible, not kit-filtered

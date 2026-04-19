@@ -79,9 +79,10 @@ export async function createOnboardingBusiness(
         slug: s,
         is_active: true,
         site_status: "ready",
-        kit_type: kitCategory,   // compat alias — mirrors kit_category
+        kit_type: kitCategory,        // compat alias — mirrors kit_category
         kit_family: kitFamily,
         kit_category: kitCategory,
+        onboarding_complete: true,    // explicitly mark complete; user reached step 4
       })
       .select("id, slug")
       .single();
@@ -206,6 +207,21 @@ export async function createOnboardingBusiness(
         await db.from("menu_items").insert(allItems);
       }
     }
+  }
+
+  // Seed service offerings (services-family businesses)
+  if (kit.offerings.length > 0) {
+    await db.from("service_offerings").insert(
+      kit.offerings.map((o) => ({
+        business_id:       businessId,
+        title:             o.title,
+        short_description: o.shortDescription,
+        starting_price:    o.startingPrice ?? null,
+        is_featured:       o.isFeatured,
+        is_active:         true,
+        sort_order:        o.sortOrder,
+      }))
+    );
   }
 
   return { businessId, slug: finalSlug };

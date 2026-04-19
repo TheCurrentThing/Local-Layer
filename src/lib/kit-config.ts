@@ -2,8 +2,8 @@ import type {
   KitFamily,
   KitCategory,
   FoodServiceCategory,
-  CreativeCategory,
   ServicesCategory,
+  RetailProductsCategory,
   KitIdentity,
   KitConfig,
   KitModules,
@@ -14,10 +14,9 @@ import type {
 // ─── FAMILY LABELS ────────────────────────────────────────────────────────────
 
 const FAMILY_LABELS: Record<KitFamily, string> = {
-  food_service: "Food Service",
-  creative:     "Creative",
-  services:     "Services",
-  retail:       "Retail",
+  food_service:    "Food Service",
+  services:        "Services",
+  retail_products: "Retail & Products",
 };
 
 // ─── CATEGORY → FAMILY MAP ────────────────────────────────────────────────────
@@ -26,34 +25,61 @@ const FAMILY_LABELS: Record<KitFamily, string> = {
 // the category string to get a full KitIdentity.
 
 const CATEGORY_FAMILY: Record<KitCategory, KitFamily> = {
-  cafe:       "food_service",
-  diner:      "food_service",
-  restaurant: "food_service",
-  pop_up:     "food_service",
-  food_truck: "food_service",
-  bar:        "food_service",
-  artist:     "creative",
-  trade:      "services",
+  // Food Service
+  cafe:         "food_service",
+  diner:        "food_service",
+  restaurant:   "food_service",
+  pop_up:       "food_service",
+  food_truck:   "food_service",
+  bar:          "food_service",
+  // Services — five conversion-based categories
+  on_demand:    "services",
+  project:      "services",
+  scheduled:    "services",
+  professional: "services",
+  mobile:       "services",
+  // Retail & Products
+  artist:       "retail_products",
+  maker:        "retail_products",
+  retail:       "retail_products",
+  brand:        "retail_products",
+  vintage:      "retail_products",
+  collector:    "retail_products",
+};
+
+// ─── LEGACY CATEGORY MAP ──────────────────────────────────────────────────────
+//
+// DB values that were valid in prior migrations but are no longer in KitCategory.
+// Migration 011 backfills these — this map handles the transition window.
+
+const LEGACY_CATEGORY_MAP: Partial<Record<string, KitCategory>> = {
+  trade: "project", // Migration 009: trade → services. Migration 011: trade → project.
 };
 
 // ─── FOOD SERVICE MODULE SYSTEM ───────────────────────────────────────────────
 //
 // All Food Service categories share this module base.
 // Category presets merge into it — they override specific keys, not the whole map.
-// This is what makes Food Service ONE system with multiple presets.
 
 const FOOD_SERVICE_BASE: KitModules = {
   homepage:      true,
   branding:      true,
-  menu:          true,
-  specials:      true,
-  hours:         true,
-  photos:        true,
   contact:       true,
+  photos:        true,
+  hours:         true,
   google:        true,
   launch:        true,
-  events:        false, // Off by default; enabled per category
-  announcements: false, // Off by default; enabled per category
+  events:        false,
+  announcements: false,
+  menu:          true,
+  specials:      true,
+  offerings:     false,
+  testimonials:  false,
+  service_areas: false,
+  quote_request: false,
+  booking:       false,
+  products:      false,
+  collections:   false,
 };
 
 // ─── FOOD SERVICE CATEGORY PRESETS ───────────────────────────────────────────
@@ -61,8 +87,6 @@ const FOOD_SERVICE_BASE: KitModules = {
 // Each preset is a lens on the shared Food Service system:
 //   modules       — partial override merged into FOOD_SERVICE_BASE
 //   publicSections — homepage section order for this category (in render order)
-//
-// To add a new Food Service category: add a preset here. Nothing else changes.
 
 type CategoryPreset = {
   label: string;
@@ -88,7 +112,6 @@ const FOOD_SERVICE_PRESETS: Record<FoodServiceCategory, CategoryPreset> = {
 
   cafe: {
     label: "Café",
-    // Cafes emphasize menu + atmosphere. Specials are less central.
     modules: { specials: false },
     publicSections: [
       "hero",
@@ -115,7 +138,6 @@ const FOOD_SERVICE_PRESETS: Record<FoodServiceCategory, CategoryPreset> = {
 
   pop_up: {
     label: "Pop-Up",
-    // Pop-ups have no fixed hours; events and announcements are their primary signals.
     modules: { hours: false, events: true, announcements: true },
     publicSections: [
       "hero",
@@ -129,7 +151,6 @@ const FOOD_SERVICE_PRESETS: Record<FoodServiceCategory, CategoryPreset> = {
 
   food_truck: {
     label: "Food Truck",
-    // Food trucks are mobile — events signal where they'll be.
     modules: { events: true },
     publicSections: [
       "hero",
@@ -144,8 +165,6 @@ const FOOD_SERVICE_PRESETS: Record<FoodServiceCategory, CategoryPreset> = {
 
   bar: {
     label: "Bar",
-    // Bars lead with hours, specials (happy hour), and events.
-    // Menu is available but not the primary draw.
     modules: { events: true },
     publicSections: [
       "hero",
@@ -159,51 +178,182 @@ const FOOD_SERVICE_PRESETS: Record<FoodServiceCategory, CategoryPreset> = {
   },
 };
 
-// ─── CREATIVE FAMILY ──────────────────────────────────────────────────────────
-
-const CREATIVE_BASE: KitModules = {
-  homepage:      true,
-  branding:      true,
-  menu:          false,
-  specials:      false,
-  hours:         false,
-  photos:        true,
-  contact:       true,
-  google:        true,
-  launch:        true,
-  events:        false,
-  announcements: false,
-};
-
-const CREATIVE_PRESETS: Record<CreativeCategory, CategoryPreset> = {
-  artist: {
-    label: "Artist / Creator",
-    modules: {},
-    publicSections: ["hero", "gallery", "about", "contact"],
-  },
-};
-
-// ─── SERVICES FAMILY ──────────────────────────────────────────────────────────
+// ─── SERVICES MODULE SYSTEM ───────────────────────────────────────────────────
+//
+// Services categories share one conversion-focused module backbone.
+// Categories are organized by HOW they convert customers, not by industry label.
+//
+//   on_demand   → call/request now (plumber, HVAC, locksmith, electrician, handyman)
+//   project     → quote + plan + execute (contractor, roofer, landscaper, remodeler)
+//   scheduled   → book an appointment (salon, barber, massage, trainer, cleaner)
+//   professional → consult + advise (consultant, accountant, coach, agency)
+//   mobile      → we come to you (mobile detailing, grooming, repair)
+//
+// Add a new industry by picking the right category preset — don't fork the system.
 
 const SERVICES_BASE: KitModules = {
   homepage:      true,
   branding:      true,
-  menu:          false,
-  specials:      false,
-  hours:         true,
-  photos:        true,
   contact:       true,
+  photos:        true,   // Project photos / work gallery
+  hours:         true,   // Most services have operating hours
   google:        true,
   launch:        true,
   events:        false,
   announcements: false,
+  menu:          false,
+  specials:      false,
+  offerings:     true,   // Service catalog — always on for services
+  testimonials:  true,   // Trust signal — always on for services
+  service_areas: false,  // Geographic coverage — on_demand + mobile override
+  quote_request: false,  // Quote form — on_demand + project override
+  booking:       false,  // Appointment flow — scheduled + mobile override
+  products:      false,
+  collections:   false,
 };
 
 const SERVICES_PRESETS: Record<ServicesCategory, CategoryPreset> = {
-  trade: {
-    label: "Trade / Service",
+  on_demand: {
+    label: "On-Demand Service",
+    // Fast-response businesses: service areas + quote request are core conversion tools.
+    modules: { service_areas: true, quote_request: true },
+    publicSections: [
+      "hero",
+      "quick_info",
+      "offerings",
+      "service_areas",
+      "testimonials",
+      "contact",
+    ],
+  },
+
+  project: {
+    label: "Project-Based Service",
+    // Project work: gallery of past work + quote request drive trust and conversion.
+    modules: { quote_request: true },
+    publicSections: [
+      "hero",
+      "offerings",
+      "gallery",
+      "testimonials",
+      "contact",
+    ],
+  },
+
+  scheduled: {
+    label: "Scheduled Appointment",
+    // Appointment-based: booking + hours are the primary conversion path.
+    modules: { booking: true },
+    publicSections: [
+      "hero",
+      "quick_info",
+      "offerings",
+      "testimonials",
+      "contact",
+    ],
+  },
+
+  professional: {
+    label: "Professional Service",
+    // Knowledge-based: no gallery needed; announcements for availability/news.
+    modules: { photos: false, announcements: true },
+    publicSections: [
+      "hero",
+      "offerings",
+      "testimonials",
+      "about",
+      "contact",
+    ],
+  },
+
+  mobile: {
+    label: "Mobile Service",
+    // Location-flexible: service areas + booking tell customers where and how.
+    modules: { service_areas: true, booking: true, announcements: true },
+    publicSections: [
+      "hero",
+      "quick_info",
+      "service_areas",
+      "offerings",
+      "testimonials",
+      "contact",
+    ],
+  },
+};
+
+// ─── RETAIL & PRODUCTS MODULE SYSTEM ─────────────────────────────────────────
+
+const RETAIL_PRODUCTS_BASE: KitModules = {
+  homepage:      true,
+  branding:      true,
+  contact:       true,
+  photos:        true,
+  hours:         false,
+  google:        true,
+  launch:        true,
+  events:        false,
+  announcements: false,
+  menu:          false,
+  specials:      false,
+  offerings:     false,
+  testimonials:  false,
+  service_areas: false,
+  quote_request: false,
+  booking:       false,
+  products:      true,
+  collections:   false,
+};
+
+const RETAIL_PRODUCTS_PRESETS: Record<RetailProductsCategory, CategoryPreset> = {
+  artist: {
+    label: "Artist / Creator",
+    modules: { products: false },
+    publicSections: ["hero", "gallery", "about", "contact"],
+  },
+
+  maker: {
+    label: "Maker / Craft",
     modules: {},
-    publicSections: ["hero", "gallery", "quick_info", "about", "contact"],
+    publicSections: ["hero", "featured_products", "gallery", "about", "contact"],
+  },
+
+  retail: {
+    label: "Retail Shop",
+    modules: { hours: true, collections: true },
+    publicSections: [
+      "hero",
+      "quick_info",
+      "featured_products",
+      "products",
+      "gallery",
+      "about",
+      "contact",
+    ],
+  },
+
+  brand: {
+    label: "Brand / Lifestyle",
+    modules: { collections: true },
+    publicSections: ["hero", "featured_products", "gallery", "about", "contact"],
+  },
+
+  vintage: {
+    label: "Vintage / Thrift",
+    modules: { hours: true, collections: true },
+    publicSections: [
+      "hero",
+      "quick_info",
+      "products",
+      "gallery",
+      "about",
+      "contact",
+    ],
+  },
+
+  collector: {
+    label: "Collector / Rare",
+    modules: { collections: true },
+    publicSections: ["hero", "featured_products", "products", "gallery", "about", "contact"],
   },
 };
 
@@ -224,15 +374,15 @@ function resolveConfig(identity: KitIdentity): KitConfig {
       preset = FOOD_SERVICE_PRESETS[category as FoodServiceCategory]
              ?? FOOD_SERVICE_PRESETS.restaurant;
       break;
-    case "creative":
-      base   = CREATIVE_BASE;
-      preset = CREATIVE_PRESETS[category as CreativeCategory]
-             ?? CREATIVE_PRESETS.artist;
-      break;
     case "services":
       base   = SERVICES_BASE;
       preset = SERVICES_PRESETS[category as ServicesCategory]
-             ?? SERVICES_PRESETS.trade;
+             ?? SERVICES_PRESETS.on_demand;
+      break;
+    case "retail_products":
+      base   = RETAIL_PRODUCTS_BASE;
+      preset = RETAIL_PRODUCTS_PRESETS[category as RetailProductsCategory]
+             ?? RETAIL_PRODUCTS_PRESETS.maker;
       break;
     default:
       base   = FOOD_SERVICE_BASE;
@@ -265,9 +415,13 @@ export function getCategoryConfig(category: KitCategory): KitConfig {
 }
 
 // Resolve a KitIdentity from raw DB column values.
-// Handles the legacy → new transition: prefers kit_category, falls back to kit_type.
+// Handles the legacy → new transition:
+//   1. Prefers kit_category; falls back to kit_type (legacyKitType)
+//   2. Remaps legacy DB values via LEGACY_CATEGORY_MAP (e.g. 'trade' → 'project')
+//   3. Falls back to 'restaurant' if completely unrecognized
+// Old 'creative' kit_family DB values self-correct because family is derived from category.
 export function resolveKitIdentity({
-  kitFamily,
+  kitFamily: _kitFamily,
   kitCategory,
   legacyKitType,
 }: {
@@ -275,11 +429,16 @@ export function resolveKitIdentity({
   kitCategory?: string | null;
   legacyKitType?: string | null;
 }): KitIdentity {
-  const category = isKitCategory(kitCategory)    ? kitCategory
-                 : isKitCategory(legacyKitType)   ? legacyKitType
-                 : "restaurant" as KitCategory;
+  const category = isKitCategory(kitCategory)
+    ? kitCategory
+    : isKitCategory(legacyKitType)
+    ? legacyKitType
+    : (LEGACY_CATEGORY_MAP[kitCategory as string]
+      ?? LEGACY_CATEGORY_MAP[legacyKitType as string]
+      ?? "restaurant") as KitCategory;
+
   return {
-    family:   CATEGORY_FAMILY[category] ?? "food_service",
+    family: CATEGORY_FAMILY[category] ?? "food_service",
     category,
   };
 }
@@ -288,9 +447,6 @@ export function resolveKitIdentity({
 //
 // These preserve the existing API surface so all callers continue to compile
 // without changes. They route through the new resolver internally.
-//
-// Callers are encouraged to migrate to getCategoryConfig() / getKitFamilyConfig()
-// over time, but there is no urgency — these shims will remain stable.
 
 export function getKitConfig(kitType: KitType): KitConfig {
   return getCategoryConfig(kitType);
@@ -312,16 +468,24 @@ export function getKitLabel(kitType: KitType): string {
 
 export const ALL_KIT_CATEGORIES: readonly KitCategory[] = [
   "cafe", "diner", "restaurant", "pop_up", "food_truck", "bar",
-  "artist",
-  "trade",
+  "on_demand", "project", "scheduled", "professional", "mobile",
+  "artist", "maker", "retail", "brand", "vintage", "collector",
 ];
 
 export const ALL_KIT_FAMILIES: readonly KitFamily[] = [
-  "food_service", "creative", "services", "retail",
+  "food_service", "services", "retail_products",
 ];
 
 export const FOOD_SERVICE_CATEGORIES: readonly FoodServiceCategory[] = [
   "cafe", "diner", "restaurant", "pop_up", "food_truck", "bar",
+];
+
+export const SERVICES_CATEGORIES: readonly ServicesCategory[] = [
+  "on_demand", "project", "scheduled", "professional", "mobile",
+];
+
+export const RETAIL_PRODUCTS_CATEGORIES: readonly RetailProductsCategory[] = [
+  "artist", "maker", "retail", "brand", "vintage", "collector",
 ];
 
 export function isKitCategory(value: unknown): value is KitCategory {

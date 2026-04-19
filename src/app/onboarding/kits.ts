@@ -4,7 +4,7 @@
 //   kit-config.ts  — module visibility, section order, resolver logic (runtime)
 //   kits.ts        — default content seeded once at business creation (onboarding only)
 //
-// Adding a new Food Service category:
+// Adding a new category:
 //   1. Add a CategoryPreset in kit-config.ts  (module + section defaults)
 //   2. Add a KitDefinition here               (seed content + feature flags)
 //   That's it. Nothing else needs to change.
@@ -37,13 +37,24 @@ export interface KitSpecial {
   sortOrder: number;
 }
 
+// Seed offering for services-family businesses.
+// Seeded into service_offerings table at onboarding.
+export interface KitOffering {
+  title: string;
+  shortDescription: string;
+  startingPrice: string | null; // free-text, e.g. "Starting at $150" or null
+  isFeatured: boolean;
+  sortOrder: number;
+}
+
 export interface KitDefinition {
   category: KitCategory;
   label: string;
   description: string;
   tags: string[];
-  categories: KitMenuCategory[];
-  specials: KitSpecial[];
+  categories: KitMenuCategory[];  // Food service menu — empty for services/retail
+  specials: KitSpecial[];         // Food service specials — empty for services/retail
+  offerings: KitOffering[];       // Services catalog — empty for food service/retail
   features: {
     showBreakfastMenu: boolean;
     showLunchMenu: boolean;
@@ -69,9 +80,6 @@ export interface KitDefinition {
 }
 
 // ─── FOOD SERVICE KIT DEFINITIONS ────────────────────────────────────────────
-//
-// All six Food Service categories. Same module system, different defaults.
-// These are seed values only — every field is editable after onboarding.
 
 export const KITS: Record<KitCategory, KitDefinition> = {
 
@@ -82,6 +90,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Restaurant",
     description: "Full-service dining — menu, specials, gallery, and hours.",
     tags: ["Menu", "Specials", "Gallery", "Hours"],
+    offerings: [],
     categories: [
       {
         name: "Starters",
@@ -161,6 +170,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Café",
     description: "Coffee, pastries, and a menu worth returning for.",
     tags: ["Coffee", "Menu", "Hours", "Gallery"],
+    offerings: [],
     categories: [
       {
         name: "Coffee & Drinks",
@@ -221,6 +231,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Diner",
     description: "Comfort food, all-day breakfast, and honest value.",
     tags: ["Menu", "Specials", "Hours", "All-Day Breakfast"],
+    offerings: [],
     categories: [
       {
         name: "Breakfast",
@@ -292,6 +303,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Pop-Up",
     description: "Here today. A rotating menu, location-driven experience.",
     tags: ["Events", "Menu", "Location", "Announcements"],
+    offerings: [],
     categories: [
       {
         name: "This Week's Menu",
@@ -348,6 +360,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Food Truck",
     description: "Mobile menu with rotating specials and location updates.",
     tags: ["Menu", "Specials", "Location", "Hours"],
+    offerings: [],
     categories: [
       {
         name: "Today's Menu",
@@ -407,6 +420,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     label: "Bar",
     description: "Drinks, events, and the neighborhood's go-to spot.",
     tags: ["Specials", "Events", "Hours", "Gallery"],
+    offerings: [],
     categories: [
       {
         name: "Cocktails",
@@ -471,7 +485,314 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     },
   },
 
-  // ── Artist / Creator ────────────────────────────────────────────────────────
+  // ─── SERVICES KIT DEFINITIONS ─────────────────────────────────────────────────
+  //
+  // Five conversion-based categories. Industry labels are seed copy only —
+  // they don't fork the module system or create separate code paths.
+  //
+  // These categories answer: how does this business convert a new customer?
+  //   on_demand   → call or request right now
+  //   project     → scoped work, quote first
+  //   scheduled   → book an appointment
+  //   professional → consult, advise, engage
+  //   mobile      → we come to you
+
+  // ── On-Demand Service ────────────────────────────────────────────────────────
+
+  on_demand: {
+    category: "on_demand",
+    label: "On-Demand Service",
+    description: "Fast local response — call now, request service, get it done today.",
+    tags: ["Service Areas", "Offerings", "Testimonials", "Quote Request"],
+    categories: [],
+    specials: [],
+    offerings: [
+      {
+        title: "Emergency Call-Out",
+        shortDescription: "Same-day and after-hours response. We show up when you need us.",
+        startingPrice: "Starting at $95",
+        isFeatured: true,
+        sortOrder: 1,
+      },
+      {
+        title: "Diagnostics & Assessment",
+        shortDescription: "Full inspection to identify the issue before any work begins.",
+        startingPrice: "Starting at $75",
+        isFeatured: false,
+        sortOrder: 2,
+      },
+      {
+        title: "Scheduled Maintenance",
+        shortDescription: "Routine service visit to keep everything running right.",
+        startingPrice: "From $120",
+        isFeatured: false,
+        sortOrder: 3,
+      },
+    ],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: false,
+      showTestimonials: true,
+      showMap: true,
+      showOnlineOrdering: false,
+      showStickyMobileBar: true,
+    },
+    defaults: {
+      heroEyebrow: "Licensed & Insured",
+      heroHeadline: "Fast, reliable service when you need it.",
+      heroSubheadline: "Local experts available now. Call or request service online.",
+      heroPrimaryCtaLabel: "Request Service",
+      aboutTitle: "About Us",
+      aboutBody: [
+        "We're a licensed and insured local service team built around one promise: show up fast and do it right.",
+        "Available for same-day appointments and after-hours emergencies. Serving our community.",
+      ],
+      galleryTitle: "Our Work",
+      menuPreviewTitle: "Services",
+      contactTitle: "Get in Touch",
+    },
+  },
+
+  // ── Project-Based Service ────────────────────────────────────────────────────
+
+  project: {
+    category: "project",
+    label: "Project-Based Service",
+    description: "Scoped work from quote to completion — contractors, builders, remodelers.",
+    tags: ["Quote Request", "Gallery", "Testimonials", "Offerings"],
+    categories: [],
+    specials: [],
+    offerings: [
+      {
+        title: "Free Consultation & Quote",
+        shortDescription: "We come out, assess the scope, and give you a clear written estimate.",
+        startingPrice: null,
+        isFeatured: true,
+        sortOrder: 1,
+      },
+      {
+        title: "Full Project Management",
+        shortDescription: "End-to-end management from planning through final walkthrough.",
+        startingPrice: "Custom pricing",
+        isFeatured: false,
+        sortOrder: 2,
+      },
+      {
+        title: "Small Jobs & Repairs",
+        shortDescription: "Quick, targeted fixes — no project too small.",
+        startingPrice: "Starting at $200",
+        isFeatured: false,
+        sortOrder: 3,
+      },
+    ],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: true,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: true,
+    },
+    defaults: {
+      heroEyebrow: "Licensed & Insured",
+      heroHeadline: "Built right, from start to finish.",
+      heroSubheadline: "Quality work, honest timelines, and a crew you can count on.",
+      heroPrimaryCtaLabel: "Request a Quote",
+      aboutTitle: "About Our Work",
+      aboutBody: [
+        "We're a licensed contractor serving our local community with straightforward work and honest pricing.",
+        "Every project managed end-to-end. Call or message to get started with a free consultation.",
+      ],
+      galleryTitle: "Our Work",
+      menuPreviewTitle: "Services",
+      contactTitle: "Get a Quote",
+    },
+  },
+
+  // ── Scheduled Appointment ────────────────────────────────────────────────────
+
+  scheduled: {
+    category: "scheduled",
+    label: "Scheduled Appointment",
+    description: "Book your next appointment — salon, barber, massage, trainer, and more.",
+    tags: ["Booking", "Offerings", "Hours", "Testimonials"],
+    categories: [],
+    specials: [],
+    offerings: [
+      {
+        title: "Standard Session",
+        shortDescription: "Our signature service. Ask about what's included.",
+        startingPrice: "Starting at $60",
+        isFeatured: true,
+        sortOrder: 1,
+      },
+      {
+        title: "Premium Experience",
+        shortDescription: "Elevated service with extra time and attention to detail.",
+        startingPrice: "Starting at $95",
+        isFeatured: false,
+        sortOrder: 2,
+      },
+      {
+        title: "First-Time Visit",
+        shortDescription: "New client? This is the right way to start.",
+        startingPrice: "From $45",
+        isFeatured: false,
+        sortOrder: 3,
+      },
+    ],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: true,
+      showMap: true,
+      showOnlineOrdering: false,
+      showStickyMobileBar: true,
+    },
+    defaults: {
+      heroEyebrow: "Now Booking",
+      heroHeadline: "Book your next appointment.",
+      heroSubheadline: "Professional service on your schedule. Easy booking, no surprises.",
+      heroPrimaryCtaLabel: "Book Now",
+      aboutTitle: "About Us",
+      aboutBody: [
+        "We're a professional service built around one thing: making every appointment feel worth it.",
+        "Easy booking, consistent results, and people you'll want to come back to.",
+      ],
+      galleryTitle: "Our Space",
+      menuPreviewTitle: "Services",
+      contactTitle: "Book or Contact Us",
+    },
+  },
+
+  // ── Professional Service ─────────────────────────────────────────────────────
+
+  professional: {
+    category: "professional",
+    label: "Professional Service",
+    description: "Expert guidance and advisory — consultants, agencies, coaches, accountants.",
+    tags: ["Testimonials", "Offerings", "Contact", "Announcements"],
+    categories: [],
+    specials: [],
+    offerings: [
+      {
+        title: "Initial Consultation",
+        shortDescription: "One hour to understand your situation and where we can help.",
+        startingPrice: "From $150",
+        isFeatured: true,
+        sortOrder: 1,
+      },
+      {
+        title: "Ongoing Engagement",
+        shortDescription: "Regular collaboration with dedicated support and deliverables.",
+        startingPrice: "Custom pricing",
+        isFeatured: false,
+        sortOrder: 2,
+      },
+      {
+        title: "Project-Based Work",
+        shortDescription: "Clear scope, clear timeline, clear outcome.",
+        startingPrice: "Contact for pricing",
+        isFeatured: false,
+        sortOrder: 3,
+      },
+    ],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: false,
+      showTestimonials: true,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: false,
+    },
+    defaults: {
+      heroEyebrow: "Available for Engagements",
+      heroHeadline: "Expert guidance when it matters.",
+      heroSubheadline: "Strategy, planning, and execution — built around your goals.",
+      heroPrimaryCtaLabel: "Get in Touch",
+      aboutTitle: "About Our Work",
+      aboutBody: [
+        "We're an independent professional service firm working with clients who need real expertise, not generic advice.",
+        "Straightforward engagements, clear deliverables, and a genuine focus on your outcomes.",
+      ],
+      galleryTitle: "Our Work",
+      menuPreviewTitle: "Services",
+      contactTitle: "Start a Conversation",
+    },
+  },
+
+  // ── Mobile Service ───────────────────────────────────────────────────────────
+
+  mobile: {
+    category: "mobile",
+    label: "Mobile Service",
+    description: "We come to you — mobile detailing, grooming, repair, and more.",
+    tags: ["Service Areas", "Booking", "Offerings", "Announcements"],
+    categories: [],
+    specials: [],
+    offerings: [
+      {
+        title: "Mobile Visit",
+        shortDescription: "We bring everything to your location — home, office, wherever works.",
+        startingPrice: "Starting at $80",
+        isFeatured: true,
+        sortOrder: 1,
+      },
+      {
+        title: "Premium Package",
+        shortDescription: "Full-service treatment with everything included.",
+        startingPrice: "Starting at $140",
+        isFeatured: false,
+        sortOrder: 2,
+      },
+      {
+        title: "Fleet or Group Rate",
+        shortDescription: "Serving multiple units at the same location.",
+        startingPrice: "Contact for pricing",
+        isFeatured: false,
+        sortOrder: 3,
+      },
+    ],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: false,
+      showTestimonials: true,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: true,
+    },
+    defaults: {
+      heroEyebrow: "We Come to You",
+      heroHeadline: "Professional service at your location.",
+      heroSubheadline: "Mobile service delivered to your home, office, or wherever you need it.",
+      heroPrimaryCtaLabel: "Check Availability",
+      aboutTitle: "About Our Service",
+      aboutBody: [
+        "We're a fully mobile service bringing professional-grade work directly to your location.",
+        "No appointments to drive to. We handle everything on-site.",
+      ],
+      galleryTitle: "Our Work",
+      menuPreviewTitle: "Services",
+      contactTitle: "Book or Inquire",
+    },
+  },
+
+  // ─── RETAIL & PRODUCTS KIT DEFINITIONS ───────────────────────────────────────
 
   artist: {
     category: "artist",
@@ -480,6 +801,7 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     tags: ["Gallery", "Portfolio", "Commissions"],
     categories: [],
     specials: [],
+    offerings: [],
     features: {
       showBreakfastMenu: false,
       showLunchMenu: false,
@@ -507,15 +829,49 @@ export const KITS: Record<KitCategory, KitDefinition> = {
     },
   },
 
-  // ── Trade / Service ─────────────────────────────────────────────────────────
-
-  trade: {
-    category: "trade",
-    label: "Trade / Service",
-    description: "Services, pricing, and booking for contractors and trade pros.",
-    tags: ["Services", "Pricing", "Booking", "Hours"],
+  maker: {
+    category: "maker",
+    label: "Maker / Craft",
+    description: "Handmade goods — products, gallery, and the story behind the work.",
+    tags: ["Products", "Handmade", "Gallery"],
     categories: [],
     specials: [],
+    offerings: [],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: false,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: false,
+    },
+    defaults: {
+      heroEyebrow: "Handmade",
+      heroHeadline: "Made by hand. Built to last.",
+      heroSubheadline: "Every piece is crafted with care. Browse the collection.",
+      heroPrimaryCtaLabel: "Shop Now",
+      aboutTitle: "About My Craft",
+      aboutBody: [
+        "I'm an independent maker creating handmade goods from my studio.",
+        "Each piece is made to order or in small batches. Quality over quantity — always.",
+      ],
+      galleryTitle: "The Work",
+      menuPreviewTitle: "Shop",
+      contactTitle: "Get in Touch",
+    },
+  },
+
+  retail: {
+    category: "retail",
+    label: "Retail Shop",
+    description: "Physical or online shop with products, collections, and hours.",
+    tags: ["Products", "Collections", "Hours", "Gallery"],
+    categories: [],
+    specials: [],
+    offerings: [],
     features: {
       showBreakfastMenu: false,
       showLunchMenu: false,
@@ -528,18 +884,123 @@ export const KITS: Record<KitCategory, KitDefinition> = {
       showStickyMobileBar: true,
     },
     defaults: {
-      heroEyebrow: "Licensed & Insured",
-      heroHeadline: "Built right, every time.",
-      heroSubheadline: "Quality work, honest pricing, and a team that shows up.",
-      heroPrimaryCtaLabel: "Get a Quote",
-      aboutTitle: "About Our Work",
+      heroEyebrow: "Now Open",
+      heroHeadline: "Shop local. Shop well.",
+      heroSubheadline: "Curated products, thoughtfully chosen. Stop in or browse online.",
+      heroPrimaryCtaLabel: "Browse Products",
+      aboutTitle: "About the Shop",
       aboutBody: [
-        "We are a licensed and insured trade business serving our local community.",
-        "Every job done right, on time, and at a fair price. Call or message to get started.",
+        "We're an independent retail shop bringing thoughtfully curated products to our community.",
+        "Every item on the shelf is here for a reason. Come see why.",
       ],
-      galleryTitle: "Our Work",
-      menuPreviewTitle: "Services",
-      contactTitle: "Contact Us",
+      galleryTitle: "In the Shop",
+      menuPreviewTitle: "Featured Products",
+      contactTitle: "Visit Us",
+    },
+  },
+
+  brand: {
+    category: "brand",
+    label: "Brand / Lifestyle",
+    description: "Brand identity and product lines for lifestyle and DTC businesses.",
+    tags: ["Products", "Collections", "Brand", "Gallery"],
+    categories: [],
+    specials: [],
+    offerings: [],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: false,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: false,
+    },
+    defaults: {
+      heroEyebrow: "New Collection",
+      heroHeadline: "A brand with a point of view.",
+      heroSubheadline: "Designed with intention. Built for the life you actually live.",
+      heroPrimaryCtaLabel: "Shop the Collection",
+      aboutTitle: "About the Brand",
+      aboutBody: [
+        "We're an independent brand built around a clear point of view.",
+        "Every product we make reflects something we believe in. Browse the collection.",
+      ],
+      galleryTitle: "The Look",
+      menuPreviewTitle: "Shop",
+      contactTitle: "Contact",
+    },
+  },
+
+  vintage: {
+    category: "vintage",
+    label: "Vintage / Thrift",
+    description: "Curated vintage and secondhand with rotating inventory.",
+    tags: ["Vintage", "Curated", "Hours", "Gallery"],
+    categories: [],
+    specials: [],
+    offerings: [],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: false,
+      showMap: true,
+      showOnlineOrdering: false,
+      showStickyMobileBar: true,
+    },
+    defaults: {
+      heroEyebrow: "New Arrivals Weekly",
+      heroHeadline: "Old things, new homes.",
+      heroSubheadline: "Carefully sourced vintage and secondhand. Inventory rotates constantly.",
+      heroPrimaryCtaLabel: "See What's In",
+      aboutTitle: "About the Shop",
+      aboutBody: [
+        "We're a curated vintage and thrift shop with a sharp eye for the good stuff.",
+        "Inventory rotates weekly. Come back often — something new is always waiting.",
+      ],
+      galleryTitle: "Recent Finds",
+      menuPreviewTitle: "Current Inventory",
+      contactTitle: "Find Us",
+    },
+  },
+
+  collector: {
+    category: "collector",
+    label: "Collector / Rare",
+    description: "Rare, limited, and curated items organized into collections.",
+    tags: ["Rare", "Curated", "Collections", "Gallery"],
+    categories: [],
+    specials: [],
+    offerings: [],
+    features: {
+      showBreakfastMenu: false,
+      showLunchMenu: false,
+      showDinnerMenu: false,
+      showSpecials: false,
+      showGallery: true,
+      showTestimonials: false,
+      showMap: false,
+      showOnlineOrdering: false,
+      showStickyMobileBar: false,
+    },
+    defaults: {
+      heroEyebrow: "Curated Collection",
+      heroHeadline: "Rare things, carefully chosen.",
+      heroSubheadline: "A curated archive of rare and limited pieces. Inquire to acquire.",
+      heroPrimaryCtaLabel: "Browse the Archive",
+      aboutTitle: "About the Collection",
+      aboutBody: [
+        "We source, curate, and sell rare and collectible items for serious enthusiasts.",
+        "Every piece in the archive has been vetted for authenticity and condition. Reach out to inquire.",
+      ],
+      galleryTitle: "The Archive",
+      menuPreviewTitle: "Available Now",
+      contactTitle: "Inquire",
     },
   },
 };
