@@ -11,13 +11,12 @@ import type {
   BusinessEvent,
   Collection,
   GalleryImage,
-  MenuCategory,
   Product,
   ServiceArea,
   ServiceOffering,
   Testimonial,
 } from "@/types/site";
-import type { BusinessSpecial } from "@/types/menu";
+import type { BusinessSpecial, MenuCategory } from "@/types/menu";
 import type { KitCategory, KitFamily } from "@/types/kit";
 
 export type CategorySeed = {
