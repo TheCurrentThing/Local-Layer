@@ -10,6 +10,7 @@ import FeaturePillars from "@/components/landing/FeaturePillars";
 import Pricing from "@/components/landing/Pricing";
 import FinalCta from "@/components/landing/FinalCta";
 import Footer from "@/components/landing/Footer";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export const metadata = {
   title: "Local Layer — Your business. Live. Under control.",
@@ -17,10 +18,16 @@ export const metadata = {
     "Update your menu, specials, hours, and branding in real time — without rebuilding your website.",
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = supabase
+    ? await supabase.auth.getUser()
+    : { data: { user: null } };
+  const isLoggedIn = !!user;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header isLoggedIn={isLoggedIn} />
       <main>
         <Hero />
         <KitSelector />

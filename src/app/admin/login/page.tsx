@@ -63,10 +63,10 @@ export default function AdminLoginPage({
               letterSpacing: "-0.02em",
             }}
           >
-            Admin Sign In
+            Sign In
           </h1>
           <p style={{ fontSize: 13, color: "#52525c", marginTop: 6 }}>
-            Enter your credentials to access the admin panel.
+            Enter your credentials to access your account.
           </p>
         </div>
 

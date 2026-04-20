@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { List, X } from "@phosphor-icons/react";
+import { createBrowserClient } from "@supabase/ssr";
 
 const navLinks = [
   { label: "Kits",         href: "#kit-selector"       },
@@ -12,8 +14,19 @@ const navLinks = [
   { label: "Pricing",      href: "#pricing"             },
 ];
 
-export default function Header() {
+export default function Header({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
@@ -52,16 +65,43 @@ export default function Header() {
             <span className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground/50 uppercase select-none">
               sys:ready
             </span>
-            <Button asChild size="sm" className="bg-primary text-primary-foreground rounded-sm font-mono text-[11px] tracking-wide hover:-translate-y-0.5 transition-all duration-150 px-4">
-              <a href="/onboarding">Launch Your Site</a>
-            </Button>
+            {isLoggedIn ? (
+              <>
+                <Button asChild variant="ghost" size="sm" className="font-mono text-[11px] tracking-wide px-3">
+                  <a href="/admin">Dashboard</a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="font-mono text-[11px] tracking-wide px-3"
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm" className="font-mono text-[11px] tracking-wide px-3">
+                  <a href="/admin/login">Sign In</a>
+                </Button>
+                <Button asChild size="sm" className="bg-primary text-primary-foreground rounded-sm font-mono text-[11px] tracking-wide hover:-translate-y-0.5 transition-all duration-150 px-4">
+                  <a href="/onboarding">Get Started</a>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-2">
-            <Button asChild size="sm" className="bg-primary text-primary-foreground rounded-sm font-mono text-[11px] px-3">
-              <a href="/onboarding">Launch</a>
-            </Button>
+            {isLoggedIn ? (
+              <Button asChild size="sm" className="bg-primary text-primary-foreground rounded-sm font-mono text-[11px] px-3">
+                <a href="/admin">Dashboard</a>
+              </Button>
+            ) : (
+              <Button asChild size="sm" className="bg-primary text-primary-foreground rounded-sm font-mono text-[11px] px-3">
+                <a href="/onboarding">Get Started</a>
+              </Button>
+            )}
             <button
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? "Close menu" : "Open menu"}
@@ -93,7 +133,21 @@ export default function Header() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 LIVE
               </span>
-              <span className="font-mono text-[9px] tracking-[0.15em] text-muted-foreground/40 uppercase">sys:ready</span>
+              {isLoggedIn ? (
+                <button
+                  onClick={handleSignOut}
+                  className="font-mono text-[9px] tracking-[0.12em] text-muted-foreground hover:text-foreground uppercase transition-colors"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <a
+                  href="/admin/login"
+                  className="font-mono text-[9px] tracking-[0.12em] text-muted-foreground hover:text-foreground uppercase transition-colors"
+                >
+                  Sign In
+                </a>
+              )}
             </div>
           </nav>
         </div>

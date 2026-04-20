@@ -35,5 +35,5 @@ export async function signOutAction() {
   if (client) {
     await client.auth.signOut();
   }
-  redirect("/admin/login");
+  redirect("/");
 }
