@@ -11,6 +11,14 @@ import { resolveTheme } from "@/lib/theme-utils";
 import { BrandingPreviewStage } from "@/components/admin/branding/BrandingPreviewStage";
 import type { SitePayload } from "@/types/site";
 
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+const divider = (
+  <div style={{ borderTop: "1px solid rgba(255,255,255,0.038)", margin: "0 16px" }} />
+);
+
+// ─── component ───────────────────────────────────────────────────────────────
+
 export function BrandingThemeForm({
   initialBrand,
   payload,
@@ -18,21 +26,19 @@ export function BrandingThemeForm({
   initialBrand: {
     businessName: string;
     tagline: string;
-    logoUrl?: string;
+    logoUrl?: string | null;
     themeMode: "preset" | "custom";
     themePresetId: string | null;
     themeTokens: ThemeTokens;
+    // Content fields — live-edit here, save to homepage_content on submit
+    heroEyebrow: string;
+    heroImageUrl: string | null;
+    heroPrimaryCtaLabel: string;
   };
-  /**
-   * The business's real, saved SitePayload. Powers the live preview stage —
-   * menu items, services, products, gallery, testimonials, hours, socials all
-   * flow through unmodified. Branding edits layer on top via the stage.
-   */
   payload: SitePayload;
 }) {
+  // ── theme state ─────────────────────────────────────────────────────────────
   const initialPreset = getThemePresetById(initialBrand.themePresetId);
-  const [businessName, setBusinessName] = useState(initialBrand.businessName);
-  const [tagline, setTagline] = useState(initialBrand.tagline);
   const [selectedPreset, setSelectedPreset] = useState<ThemePreset>(initialPreset);
   const [themeMode, setThemeMode] = useState<"preset" | "custom">(initialBrand.themeMode);
   const [themeTokens, setThemeTokens] = useState<ThemeTokens>(initialBrand.themeTokens);
@@ -43,6 +49,19 @@ export function BrandingThemeForm({
   );
   const colors = resolvedTheme.resolvedColors;
 
+  // ── identity state ──────────────────────────────────────────────────────────
+  const [businessName, setBusinessName] = useState(initialBrand.businessName);
+  const [tagline, setTagline] = useState(initialBrand.tagline);
+  const [logoUrl, setLogoUrl] = useState(initialBrand.logoUrl ?? "");
+
+  // ── hero state ──────────────────────────────────────────────────────────────
+  const [heroEyebrow, setHeroEyebrow] = useState(initialBrand.heroEyebrow);
+  const [heroImageUrl, setHeroImageUrl] = useState(initialBrand.heroImageUrl ?? "");
+
+  // ── actions state ───────────────────────────────────────────────────────────
+  const [heroPrimaryCtaLabel, setHeroPrimaryCtaLabel] = useState(initialBrand.heroPrimaryCtaLabel);
+
+  // ── preset handlers ─────────────────────────────────────────────────────────
   function handlePresetSelect(preset: ThemePreset) {
     setSelectedPreset(preset);
     setThemeMode("preset");
@@ -70,7 +89,7 @@ export function BrandingThemeForm({
       <input type="hidden" name="theme_tokens" value={JSON.stringify(colors)} />
 
       {/* ═══════════════════════════════════════════════
-          LEFT RAIL: Theme + typography selector
+          LEFT RAIL: Preset + typography direction
       ═══════════════════════════════════════════════ */}
       <div
         style={{
@@ -248,7 +267,10 @@ export function BrandingThemeForm({
             brandingDraft={{
               businessName,
               tagline,
-              logoUrl: initialBrand.logoUrl ?? null,
+              logoUrl: logoUrl.trim() || null,
+              heroEyebrow: heroEyebrow || null,
+              heroImageUrl: heroImageUrl.trim() || null,
+              heroPrimaryCtaLabel,
               themeMode,
               themePresetId: selectedPreset.id,
               themeTokens: colors,
@@ -260,12 +282,12 @@ export function BrandingThemeForm({
       </div>
 
       {/* ═══════════════════════════════════════════════
-          RIGHT RAIL: Identity controls
+          RIGHT RAIL: All editable branding controls
       ═══════════════════════════════════════════════ */}
       <div
         style={{
-          width: 220,
-          minWidth: 220,
+          width: 236,
+          minWidth: 236,
           background: "rgba(255,255,255,0.01)",
           border: "1px solid rgba(255,255,255,0.038)",
           borderRadius: 10,
@@ -274,50 +296,21 @@ export function BrandingThemeForm({
           flexDirection: "column",
         }}
       >
+        {/* Header */}
         <div className="panel-header">
-          <span className="label-upper">Identity</span>
+          <span className="label-upper">Controls</span>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span className="animate-pulse-dot" style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "#4ade80" }} />
             <span style={{ fontSize: 9, color: "#2d5c3e", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Live</span>
           </div>
         </div>
 
+        {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-          {/* ── Active config ── */}
+
+          {/* ── Identity ── */}
           <div style={{ padding: "14px 16px 12px" }}>
-            <span className="section-label">Active</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
-                  background: selectedPreset.colors.background,
-                  border: `1.5px solid ${colors.primary}50`,
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "flex-end",
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{ width: "100%", height: 9, background: `linear-gradient(to right, ${colors.primary}cc, ${colors.primary}55)` }} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 12, fontWeight: 500, color: "#c2c0b9", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
-                  {selectedPreset.name}
-                </p>
-                <p style={{ fontSize: 10, color: "#48484e", marginTop: 2, letterSpacing: "0.01em" }}>
-                  {selectedPreset.fonts.label}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.038)", margin: "0 16px" }} />
-
-          {/* ── Brand details ── */}
-          <div style={{ padding: "12px 16px" }}>
-            <span className="section-label">Brand</span>
+            <span className="section-label">Identity</span>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
                 <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-business-name">
@@ -348,9 +341,64 @@ export function BrandingThemeForm({
             </div>
           </div>
 
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.038)", margin: "0 16px" }} />
+          {divider}
 
-          {/* ── Accent color ── */}
+          {/* ── Hero ── */}
+          <div style={{ padding: "12px 16px" }}>
+            <span className="section-label">Hero</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-hero-eyebrow">
+                  Eyebrow
+                </label>
+                <input
+                  id="bk-hero-eyebrow"
+                  name="hero_eyebrow"
+                  value={heroEyebrow}
+                  onChange={(e) => setHeroEyebrow(e.target.value)}
+                  placeholder="e.g. Open Now · Austin TX"
+                  className="ctrl-input"
+                />
+              </div>
+              <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-hero-image">
+                  Image URL
+                </label>
+                <input
+                  id="bk-hero-image"
+                  name="hero_image_url"
+                  value={heroImageUrl}
+                  onChange={(e) => setHeroImageUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="ctrl-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          {divider}
+
+          {/* ── Actions ── */}
+          <div style={{ padding: "12px 16px" }}>
+            <span className="section-label">Actions</span>
+            <div>
+              <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-primary-cta">
+                Primary CTA
+              </label>
+              <input
+                id="bk-primary-cta"
+                name="hero_primary_cta_label"
+                value={heroPrimaryCtaLabel}
+                onChange={(e) => setHeroPrimaryCtaLabel(e.target.value)}
+                placeholder="e.g. Order Now"
+                className="ctrl-input"
+              />
+            </div>
+          </div>
+
+          {divider}
+
+          {/* ── Accent ── */}
           <div style={{ padding: "12px 16px" }}>
             <span className="section-label">Accent</span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -373,14 +421,15 @@ export function BrandingThemeForm({
             </div>
           </div>
 
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.038)", margin: "0 16px" }} />
+          {divider}
 
           {/* ── Logo ── */}
           <div style={{ padding: "12px 16px" }}>
             <span className="section-label">Logo</span>
             <input
               name="logo_url"
-              defaultValue={initialBrand.logoUrl ?? ""}
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://..."
               className="ctrl-input"
               style={{ marginBottom: 8 }}
@@ -395,11 +444,11 @@ export function BrandingThemeForm({
                 <path d="M6 8V2M6 2L4 4M6 2l2 2M2 10h8" stroke="#3c3c46" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span style={{ fontSize: 10.5, color: "#48484e", textAlign: "center", lineHeight: 1.4 }}>
-                {initialBrand.logoUrl ? "Replace logo" : "PNG or SVG"}
+                {logoUrl ? "Replace logo" : "PNG or SVG"}
               </span>
             </label>
             <input id="bk-logo-upload" type="file" name="logo_file" accept=".png,.jpg,.jpeg,.webp,.svg" style={{ display: "none" }} />
-            {!initialBrand.logoUrl && (
+            {!logoUrl && (
               <p style={{ fontSize: 9.5, color: "#32323a", marginTop: 6, textAlign: "center", letterSpacing: "0.03em" }}>
                 No logo set
               </p>

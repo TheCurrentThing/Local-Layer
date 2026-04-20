@@ -1239,6 +1239,40 @@ export async function saveBrandingAction(formData: FormData) {
     }
   }
 
+  // Save hero / CTA fields to homepage_content if the form includes them.
+  // These fields live in homepage_content, not business_settings.
+  // Non-fatal: branding (identity + theme) is the primary concern of this action.
+  const heroEyebrow = formData.get("hero_eyebrow");
+  const heroImageUrl = formData.get("hero_image_url");
+  const heroPrimaryCtaLabel = formData.get("hero_primary_cta_label");
+  const hasHeroFields =
+    heroEyebrow !== null || heroImageUrl !== null || heroPrimaryCtaLabel !== null;
+  if (hasHeroFields) {
+    try {
+      const hcBase = await getHomepageContentBase(businessId);
+      await saveHomepageContentRecord({
+        id: hcBase.id,
+        values: {
+          ...hcBase.values,
+          ...(heroEyebrow !== null && {
+            hero_eyebrow: (heroEyebrow as string).trim(),
+          }),
+          ...(heroImageUrl !== null && {
+            hero_image_url: (heroImageUrl as string).trim() || null,
+          }),
+          ...(heroPrimaryCtaLabel !== null && {
+            hero_primary_cta_label: (heroPrimaryCtaLabel as string).trim(),
+          }),
+        },
+      });
+      revalidateHomepage();
+    } catch (error) {
+      rethrowIfRedirectSignal(error);
+      // Log but continue — branding save must still complete.
+      console.error("[saveBrandingAction] homepage_content patch failed:", error);
+    }
+  }
+
   return upsertBusinessSettingsPatch(
     businessId,
     {

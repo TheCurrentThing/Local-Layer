@@ -39,6 +39,9 @@ export default async function AdminBrandingPage({ searchParams }: AdminPageProps
             themeMode: payload.brand.themeMode,
             themePresetId: payload.brand.themePresetId,
             themeTokens: payload.brand.themeTokens,
+            heroEyebrow: payload.settings.heroEyebrow,
+            heroImageUrl: payload.homePage.heroImageUrl ?? null,
+            heroPrimaryCtaLabel: payload.settings.heroPrimaryCtaLabel,
           }}
         />
       </form>

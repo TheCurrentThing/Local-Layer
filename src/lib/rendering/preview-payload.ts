@@ -1,7 +1,8 @@
 // Build the SitePayload the renderer consumes on the Branding preview stage.
 //
 // Layering (highest wins):
-//   1. Branding draft — businessName, tagline, logoUrl, theme selection
+//   1. Branding draft — businessName, tagline, logoUrl, theme selection,
+//      heroEyebrow, heroImageUrl, heroPrimaryCtaLabel
 //      (the fields the user is actively editing on the Branding page)
 //   2. Real published payload — everything else the business has saved
 //      (menu, products, services, gallery, testimonials, events, hours, socials)
@@ -22,6 +23,7 @@ export type BrandingDraft = {
   logoUrl?: string | null;
   heroImageUrl?: string | null;
   heroEyebrow?: string | null;
+  heroPrimaryCtaLabel?: string;
   // Theme selection from the left-rail preset picker
   themeMode?: "preset" | "custom";
   themePresetId?: string;
@@ -86,6 +88,12 @@ export function buildPreviewPayload(
       out.settings = {
         ...out.settings,
         heroEyebrow: brandingDraft.heroEyebrow,
+      };
+    }
+    if (brandingDraft.heroPrimaryCtaLabel !== undefined) {
+      out.settings = {
+        ...out.settings,
+        heroPrimaryCtaLabel: brandingDraft.heroPrimaryCtaLabel,
       };
     }
   }
