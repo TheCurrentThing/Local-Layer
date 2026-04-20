@@ -1,6 +1,5 @@
 import type { HTMLInputTypeAttribute, ReactNode } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   PendingDeleteButton,
   PendingSubmitButton,
@@ -63,19 +62,16 @@ export function AdminCard({
   eyebrow?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "admin-panel overflow-hidden border-white/[0.06] bg-white/[0.012] text-white",
-        className,
-      )}
-    >
-      <div className="flex items-baseline gap-3 border-b border-white/[0.07] px-4 py-3">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
-          {eyebrow ?? "System Panel"}
-        </span>
-        <span className="text-[13px] font-semibold text-white/80">{title}</span>
+    <div className={cn("admin-panel overflow-hidden text-white", className)}>
+      <div className="panel-header">
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          <span className="label-upper" style={{ color: "#d97706" }}>
+            {eyebrow ?? "System Panel"}
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--admin-text)" }}>{title}</span>
+        </div>
         {description ? (
-          <span className="ml-auto text-xs text-white/38">{description}</span>
+          <span style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>{description}</span>
         ) : null}
       </div>
       <div className={cn("space-y-4 px-4 py-4", bodyClassName)}>
@@ -97,9 +93,7 @@ export function AdminInput({
 }: InputProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
-        {label}
-      </span>
+      <span className="label-upper">{label}</span>
       <input
         name={name}
         type={type}
@@ -108,7 +102,7 @@ export function AdminInput({
         required={required}
         step={step}
         min={min}
-        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)]/60 focus:bg-black/40"
+        className="ctrl-input"
       />
     </label>
   );
@@ -124,16 +118,15 @@ export function AdminTextarea({
 }: TextareaProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
-        {label}
-      </span>
+      <span className="label-upper">{label}</span>
       <textarea
         name={name}
         defaultValue={defaultValue ?? ""}
         rows={rows}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[var(--color-primary)]/60 focus:bg-black/40"
+        className="ctrl-input"
+        style={{ resize: "none" }}
       />
     </label>
   );
@@ -145,12 +138,21 @@ export function AdminCheckbox({
   defaultChecked,
 }: CheckboxProps) {
   return (
-    <label className="flex items-center gap-3 rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white transition hover:border-white/16">
+    <label
+      className="flex items-center gap-3 rounded-[8px] text-sm transition"
+      style={{
+        padding: "10px 12px",
+        background: "var(--admin-input-bg)",
+        border: "1px solid var(--admin-input-border)",
+        color: "var(--admin-text)",
+      }}
+    >
       <input
         name={name}
         type="checkbox"
         defaultChecked={defaultChecked}
-        className="h-4 w-4 accent-[var(--color-primary)]"
+        className="h-4 w-4"
+        style={{ accentColor: "#d97706" }}
       />
       <span>{label}</span>
     </label>
@@ -165,13 +167,11 @@ export function AdminSelect({
 }: SelectProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
-        {label}
-      </span>
+      <span className="label-upper">{label}</span>
       <select
         name={name}
         defaultValue={defaultValue}
-        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[var(--color-primary)]/60 focus:bg-black/40"
+        className="ctrl-input"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -191,17 +191,18 @@ export function AdminFileInput({
 }: FileInputProps) {
   return (
     <label className="block space-y-1.5">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/42">
-        {label}
-      </span>
+      <span className="label-upper">{label}</span>
       <input
         name={name}
         type="file"
         accept={accept}
-        className="w-full rounded-[8px] border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white/70 outline-none transition file:mr-3 file:rounded-[6px] file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+        className="ctrl-input"
+        style={{
+          color: "var(--admin-text-muted)",
+        }}
       />
       {helperText ? (
-        <p className="text-xs text-white/45">{helperText}</p>
+        <p style={{ fontSize: 11, color: "var(--admin-text-muted)" }}>{helperText}</p>
       ) : null}
     </label>
   );
@@ -233,15 +234,14 @@ export function PreviewLink({
   label?: string;
 }) {
   return (
-    <Button
-      asChild
-      variant="outline"
-      className="rounded-[0.95rem] border-white/12 bg-white/[0.04] text-white/78 hover:bg-white/[0.07]"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="btn-ghost"
     >
-      <a href={href} target="_blank" rel="noopener noreferrer">
-        {label}
-      </a>
-    </Button>
+      {label}
+    </a>
   );
 }
 
@@ -253,13 +253,8 @@ export function PageLink({
   label: string;
 }) {
   return (
-    <Button
-      asChild
-      variant="outline"
-      className="rounded-[0.95rem] border-white/12 bg-white/[0.04] text-white/78 hover:bg-white/[0.07]"
-    >
-      <Link href={href}>{label}</Link>
-    </Button>
+    <Link href={href} className="btn-ghost">
+      {label}
+    </Link>
   );
 }
-

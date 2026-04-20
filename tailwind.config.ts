@@ -42,6 +42,40 @@ const config: Config = {
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
+        // ── Admin design-system tokens ───────────────────────────────
+        admin: {
+          bg:           "var(--admin-bg)",
+          chrome:       "var(--admin-chrome)",
+          "chrome-border": "var(--admin-chrome-border)",
+          text: {
+            DEFAULT: "var(--admin-text)",
+            muted:   "var(--admin-text-muted)",
+            dim:     "var(--admin-text-dim)",
+          },
+          panel: {
+            bg:     "var(--admin-panel-bg)",
+            border: "var(--admin-panel-border)",
+          },
+          "row-border": "var(--admin-row-border)",
+          "hover-bg":   "var(--admin-hover-bg)",
+          input: {
+            bg:          "var(--admin-input-bg)",
+            border:      "var(--admin-input-border)",
+            text:        "var(--admin-input-text)",
+            placeholder: "var(--admin-input-placeholder)",
+          },
+          ghost: {
+            bg:          "var(--admin-ghost-bg)",
+            border:      "var(--admin-ghost-border)",
+            text:        "var(--admin-ghost-text)",
+            "hover-bg":  "var(--admin-ghost-hover-bg)",
+            "hover-border": "var(--admin-ghost-hover-border)",
+            "hover-text": "var(--admin-ghost-hover-text)",
+          },
+          label:        "var(--admin-label-upper)",
+          "label-dim":  "var(--admin-label-upper-dim)",
+          scrollbar:    "var(--admin-scrollbar)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
