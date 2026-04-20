@@ -24,7 +24,6 @@ export function SignatureRenderer({ payload, basePath }: SiteRendererProps) {
     settings,
     hours,
     homePage,
-    aboutPage,
     features,
     specials,
     menuCategories,
@@ -36,7 +35,7 @@ export function SignatureRenderer({ payload, basePath }: SiteRendererProps) {
     <>
       <LocalBusinessJsonLd brand={brand} hours={hours} />
 
-      <HeroSection brand={brand} settings={settings} homePage={homePage} />
+      <HeroSection payload={payload} />
 
       <QuickInfoBar brand={brand} settings={settings} hours={hours} />
 
@@ -65,7 +64,7 @@ export function SignatureRenderer({ payload, basePath }: SiteRendererProps) {
         />
       )}
 
-      <AboutSection about={aboutPage} />
+      <AboutSection about={payload.aboutPage} />
 
       <ContactSection
         brand={brand}

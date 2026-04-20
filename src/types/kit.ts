@@ -102,21 +102,42 @@ export type KitModules = {
 // Feature flags gate individual section visibility at render time.
 
 export type PublicSectionType =
+  // ── Chrome (new contract system) ─────────────────────────────────────────
+  | "announcement_bar"   // Thin notice strip
+  | "header"             // Navigation header
+  | "footer"             // Site footer
+  // ── Core (shared across all systems) ──────────────────────────────────────
   | "hero"
-  | "quick_info"         // Hours / key operating info bar
-  | "announcements"      // Notice strip — pop-ups, closures, seasonal hours
-  | "specials"           // Featured specials / happy hour (food service)
-  | "events"             // Upcoming events listing
-  | "featured_menu"      // Featured items spotlight (food service)
-  | "menu_preview"       // Full menu category browser (food service)
-  | "offerings"          // Service offerings catalog (services)
-  | "featured_products"  // Featured products spotlight (retail)
-  | "products"           // Full product catalog section (retail)
-  | "testimonials"       // Client testimonials (services / retail)
-  | "service_areas"      // Service coverage areas (services)
+  | "primary_cta"        // High-contrast conversion band (on_demand: call CTA)
   | "gallery"            // Photo / portfolio gallery
-  | "about"              // About section
-  | "contact";           // Contact / location / map
+  | "testimonials"       // Client testimonials
+  | "reviews"            // Alias for testimonials in food-service contracts
+  | "contact"            // Contact / location / map
+  | "hours"              // Operating hours section
+  | "location"           // Address / map section
+  | "events"             // Upcoming events listing
+  // ── Legacy / kit-config names (kept for backward compat) ─────────────────
+  | "quick_info"         // Hours / key info bar — used in kit-config presets
+  | "announcements"      // Notice strip — used in kit-config presets
+  | "about"              // About section — used in kit-config presets
+  // ── Food Service ──────────────────────────────────────────────────────────
+  | "specials"           // Featured specials / happy hour
+  | "featured_menu"      // Featured items spotlight — kit-config name
+  | "menu_preview"       // Full menu browser — kit-config name
+  | "menu"               // Consolidated menu section — contract system name
+  // ── Services ──────────────────────────────────────────────────────────────
+  | "services"           // Service offerings catalog — contract system name
+  | "offerings"          // Service offerings catalog — kit-config name
+  | "service_areas"      // Geographic coverage areas
+  | "quote_request"      // Quote / estimate request form
+  | "booking"            // Appointment booking flow
+  // ── Retail & Products ─────────────────────────────────────────────────────
+  | "featured_items"     // Featured products spotlight — contract system name
+  | "featured_products"  // Featured products spotlight — kit-config name
+  | "products"           // Full product catalog
+  | "collections"        // Product collections / series
+  | "brand_story"        // Brand narrative section (artists, makers)
+  | "commissions"        // Commission request form (artists);
 
 // ─── KIT CONFIG ──────────────────────────────────────────────────────────────
 //
@@ -131,6 +152,14 @@ export type KitConfig = {
   modules: KitModules;
   publicSections: PublicSectionType[];
 };
+
+// ─── RENDERER TYPE ────────────────────────────────────────────────────────────
+//
+// Canonical home for RendererType. Re-exported from @/types/renderer so all
+// existing `import { RendererType } from "@/types/renderer"` call sites
+// continue to compile without change.
+
+export type RendererType = "standard" | "signature";
 
 // ─── BACKWARD COMPATIBILITY ───────────────────────────────────────────────────
 //

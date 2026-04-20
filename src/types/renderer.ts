@@ -1,7 +1,9 @@
-import type { KitType } from "@/types/kit";
+import type { KitType, RendererType } from "@/types/kit";
 import type { SitePayload } from "@/types/site";
 
-export type RendererType = "standard" | "signature";
+// RendererType is defined in @/types/kit — re-exported here so all existing
+// `import { RendererType } from "@/types/renderer"` call sites keep compiling.
+export type { RendererType } from "@/types/kit";
 
 // What kind of business + how it should be rendered.
 // Passed to getRenderer() to select the right implementation.

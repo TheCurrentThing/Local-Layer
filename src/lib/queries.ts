@@ -747,6 +747,9 @@ async function loadPayload(
     menuCategories: mapMenu(rows?.categoriesRows ?? null, rows?.itemsRows ?? null, kitFamily),
     serviceOfferings: mapServiceOfferings(rows?.serviceOfferingsRows ?? null),
     serviceAreas: mapServiceAreas(rows?.serviceAreasRows ?? null),
+    products: [],
+    collections: [],
+    events: [],
     galleryImages: mapGallery(rows?.galleryRows ?? null, kitFamily),
     testimonials: mapTestimonials(rows?.testimonialsRows ?? null),
     meta: {

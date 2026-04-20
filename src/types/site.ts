@@ -132,6 +132,36 @@ export interface ServiceArea {
   isActive: boolean;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  price?: number | null;
+  imageUrl?: string;
+  description?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface Collection {
+  id: string;
+  name: string;
+  slug?: string;
+  coverImageUrl?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface BusinessEvent {
+  id: string;
+  title: string;
+  startsAt?: string;
+  endsAt?: string;
+  location?: string;
+  description?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
 export interface SitePayload {
   kitType: KitType;         // compat alias — mirrors kitCategory
   kitFamily: KitFamily;
@@ -147,6 +177,9 @@ export interface SitePayload {
   menuCategories: MenuCategory[];
   serviceOfferings: ServiceOffering[];
   serviceAreas: ServiceArea[];
+  products: Product[];
+  collections: Collection[];
+  events: BusinessEvent[];
   galleryImages: GalleryImage[];
   testimonials: Testimonial[];
 }
