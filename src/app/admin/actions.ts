@@ -70,12 +70,16 @@ function revalidateSettings() {
 
 function redirectWithState(
   path: string,
-  state: { status?: string; error?: string },
+  state: { status?: string; warning?: string; error?: string },
 ): never {
   const params = new URLSearchParams();
 
   if (state.status) {
     params.set("status", state.status);
+  }
+
+  if (state.warning) {
+    params.set("warning", state.warning);
   }
 
   if (state.error) {
@@ -991,6 +995,7 @@ async function upsertBusinessSettingsPatch(
   patch: Record<string, unknown>,
   path: string,
   successMessage: string,
+  warningMessage?: string,
 ) {
   try {
     const base = await getBusinessSettingsBase(businessId);
@@ -1069,7 +1074,7 @@ async function upsertBusinessSettingsPatch(
       throw error;
     }
     revalidateBranding();
-    redirectWithState(path, { status: successMessage });
+    redirectWithState(path, warningMessage ? { warning: warningMessage } : { status: successMessage });
   } catch (error) {
     rethrowIfRedirectSignal(error);
     redirectWithState(path, {
@@ -1243,10 +1248,21 @@ export async function saveBrandingAction(formData: FormData) {
   // These fields live in homepage_content, not business_settings.
   // Non-fatal: branding (identity + theme) is the primary concern of this action.
   const heroEyebrow = formData.get("hero_eyebrow");
+  const heroHeadline = formData.get("hero_headline");
+  const heroSubheadline = formData.get("hero_subheadline");
   const heroImageUrl = formData.get("hero_image_url");
   const heroPrimaryCtaLabel = formData.get("hero_primary_cta_label");
+  const heroSecondaryCtaLabel = formData.get("hero_secondary_cta_label");
   const hasHeroFields =
-    heroEyebrow !== null || heroImageUrl !== null || heroPrimaryCtaLabel !== null;
+    heroEyebrow !== null ||
+    heroHeadline !== null ||
+    heroSubheadline !== null ||
+    heroImageUrl !== null ||
+    heroPrimaryCtaLabel !== null ||
+    heroSecondaryCtaLabel !== null;
+
+  let heroContentSaved = true;
+
   if (hasHeroFields) {
     try {
       const hcBase = await getHomepageContentBase(businessId);
@@ -1254,24 +1270,26 @@ export async function saveBrandingAction(formData: FormData) {
         id: hcBase.id,
         values: {
           ...hcBase.values,
-          ...(heroEyebrow !== null && {
-            hero_eyebrow: (heroEyebrow as string).trim(),
-          }),
-          ...(heroImageUrl !== null && {
-            hero_image_url: (heroImageUrl as string).trim() || null,
-          }),
-          ...(heroPrimaryCtaLabel !== null && {
-            hero_primary_cta_label: (heroPrimaryCtaLabel as string).trim(),
-          }),
+          ...(heroEyebrow !== null && { hero_eyebrow: (heroEyebrow as string).trim() }),
+          ...(heroHeadline !== null && { hero_headline: (heroHeadline as string).trim() }),
+          ...(heroSubheadline !== null && { hero_subheadline: (heroSubheadline as string).trim() }),
+          ...(heroImageUrl !== null && { hero_image_url: (heroImageUrl as string).trim() || null }),
+          ...(heroPrimaryCtaLabel !== null && { hero_primary_cta_label: (heroPrimaryCtaLabel as string).trim() }),
+          ...(heroSecondaryCtaLabel !== null && { hero_secondary_cta_label: (heroSecondaryCtaLabel as string).trim() }),
         },
       });
       revalidateHomepage();
     } catch (error) {
       rethrowIfRedirectSignal(error);
-      // Log but continue — branding save must still complete.
+      heroContentSaved = false;
       console.error("[saveBrandingAction] homepage_content patch failed:", error);
     }
   }
+
+  const baseSuccessMessage = uploadedLogoUrl ? "Branding and logo saved." : "Branding saved.";
+  const warningMessage = !heroContentSaved
+    ? `${baseSuccessMessage} Hero content could not be saved — try again.`
+    : undefined;
 
   return upsertBusinessSettingsPatch(
     businessId,
@@ -1299,7 +1317,8 @@ export async function saveBrandingAction(formData: FormData) {
       body_font: bodyFontValue,
     },
     path,
-    uploadedLogoUrl ? "Branding and logo saved." : "Branding saved.",
+    baseSuccessMessage,
+    warningMessage,
   );
 }
 

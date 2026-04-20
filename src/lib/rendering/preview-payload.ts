@@ -23,7 +23,10 @@ export type BrandingDraft = {
   logoUrl?: string | null;
   heroImageUrl?: string | null;
   heroEyebrow?: string | null;
+  heroHeadline?: string;
+  heroSubheadline?: string;
   heroPrimaryCtaLabel?: string;
+  heroSecondaryCtaLabel?: string;
   // Theme selection from the left-rail preset picker
   themeMode?: "preset" | "custom";
   themePresetId?: string;
@@ -90,11 +93,20 @@ export function buildPreviewPayload(
         heroEyebrow: brandingDraft.heroEyebrow,
       };
     }
+    if (brandingDraft.heroHeadline !== undefined) {
+      out.settings = { ...out.settings, heroHeadline: brandingDraft.heroHeadline };
+    }
+    if (brandingDraft.heroSubheadline !== undefined) {
+      out.settings = { ...out.settings, heroSubheadline: brandingDraft.heroSubheadline };
+    }
     if (brandingDraft.heroPrimaryCtaLabel !== undefined) {
       out.settings = {
         ...out.settings,
         heroPrimaryCtaLabel: brandingDraft.heroPrimaryCtaLabel,
       };
+    }
+    if (brandingDraft.heroSecondaryCtaLabel !== undefined) {
+      out.settings = { ...out.settings, heroSecondaryCtaLabel: brandingDraft.heroSecondaryCtaLabel };
     }
   }
 

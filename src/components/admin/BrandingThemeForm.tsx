@@ -32,8 +32,11 @@ export function BrandingThemeForm({
     themeTokens: ThemeTokens;
     // Content fields — live-edit here, save to homepage_content on submit
     heroEyebrow: string;
+    heroHeadline: string;
+    heroSubheadline: string;
     heroImageUrl: string | null;
     heroPrimaryCtaLabel: string;
+    heroSecondaryCtaLabel: string;
   };
   payload: SitePayload;
 }) {
@@ -53,13 +56,18 @@ export function BrandingThemeForm({
   const [businessName, setBusinessName] = useState(initialBrand.businessName);
   const [tagline, setTagline] = useState(initialBrand.tagline);
   const [logoUrl, setLogoUrl] = useState(initialBrand.logoUrl ?? "");
+  // logoPreview drives the live preview; logoUrl drives the form field sent on save
+  const [logoPreview, setLogoPreview] = useState(initialBrand.logoUrl ?? "");
 
   // ── hero state ──────────────────────────────────────────────────────────────
+  const [heroHeadline, setHeroHeadline] = useState(initialBrand.heroHeadline);
+  const [heroSubheadline, setHeroSubheadline] = useState(initialBrand.heroSubheadline);
   const [heroEyebrow, setHeroEyebrow] = useState(initialBrand.heroEyebrow);
   const [heroImageUrl, setHeroImageUrl] = useState(initialBrand.heroImageUrl ?? "");
 
   // ── actions state ───────────────────────────────────────────────────────────
   const [heroPrimaryCtaLabel, setHeroPrimaryCtaLabel] = useState(initialBrand.heroPrimaryCtaLabel);
+  const [heroSecondaryCtaLabel, setHeroSecondaryCtaLabel] = useState(initialBrand.heroSecondaryCtaLabel);
 
   // ── preset handlers ─────────────────────────────────────────────────────────
   function handlePresetSelect(preset: ThemePreset) {
@@ -267,10 +275,13 @@ export function BrandingThemeForm({
             brandingDraft={{
               businessName,
               tagline,
-              logoUrl: logoUrl.trim() || null,
+              logoUrl: logoPreview.trim() || null,
               heroEyebrow: heroEyebrow || null,
+              heroHeadline,
+              heroSubheadline,
               heroImageUrl: heroImageUrl.trim() || null,
               heroPrimaryCtaLabel,
+              heroSecondaryCtaLabel,
               themeMode,
               themePresetId: selectedPreset.id,
               themeTokens: colors,
@@ -348,6 +359,32 @@ export function BrandingThemeForm({
             <span className="section-label">Hero</span>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-hero-headline">
+                  Headline
+                </label>
+                <input
+                  id="bk-hero-headline"
+                  name="hero_headline"
+                  value={heroHeadline}
+                  onChange={(e) => setHeroHeadline(e.target.value)}
+                  placeholder="e.g. Authentic Flavors"
+                  className="ctrl-input"
+                />
+              </div>
+              <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-hero-subheadline">
+                  Subheadline
+                </label>
+                <input
+                  id="bk-hero-subheadline"
+                  name="hero_subheadline"
+                  value={heroSubheadline}
+                  onChange={(e) => setHeroSubheadline(e.target.value)}
+                  placeholder="e.g. Fresh, made to order"
+                  className="ctrl-input"
+                />
+              </div>
+              <div>
                 <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-hero-eyebrow">
                   Eyebrow
                 </label>
@@ -381,18 +418,33 @@ export function BrandingThemeForm({
           {/* ── Actions ── */}
           <div style={{ padding: "12px 16px" }}>
             <span className="section-label">Actions</span>
-            <div>
-              <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-primary-cta">
-                Primary CTA
-              </label>
-              <input
-                id="bk-primary-cta"
-                name="hero_primary_cta_label"
-                value={heroPrimaryCtaLabel}
-                onChange={(e) => setHeroPrimaryCtaLabel(e.target.value)}
-                placeholder="e.g. Order Now"
-                className="ctrl-input"
-              />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-primary-cta">
+                  Primary CTA
+                </label>
+                <input
+                  id="bk-primary-cta"
+                  name="hero_primary_cta_label"
+                  value={heroPrimaryCtaLabel}
+                  onChange={(e) => setHeroPrimaryCtaLabel(e.target.value)}
+                  placeholder="e.g. Order Now"
+                  className="ctrl-input"
+                />
+              </div>
+              <div>
+                <label className="label-upper-dim" style={{ display: "block", marginBottom: 5 }} htmlFor="bk-secondary-cta">
+                  Secondary CTA
+                </label>
+                <input
+                  id="bk-secondary-cta"
+                  name="hero_secondary_cta_label"
+                  value={heroSecondaryCtaLabel}
+                  onChange={(e) => setHeroSecondaryCtaLabel(e.target.value)}
+                  placeholder="e.g. See Menu"
+                  className="ctrl-input"
+                />
+              </div>
             </div>
           </div>
 
@@ -429,7 +481,7 @@ export function BrandingThemeForm({
             <input
               name="logo_url"
               value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
+              onChange={(e) => { setLogoUrl(e.target.value); setLogoPreview(e.target.value); }}
               placeholder="https://..."
               className="ctrl-input"
               style={{ marginBottom: 8 }}
@@ -447,7 +499,17 @@ export function BrandingThemeForm({
                 {logoUrl ? "Replace logo" : "PNG or SVG"}
               </span>
             </label>
-            <input id="bk-logo-upload" type="file" name="logo_file" accept=".png,.jpg,.jpeg,.webp,.svg" style={{ display: "none" }} />
+            <input
+              id="bk-logo-upload"
+              type="file"
+              name="logo_file"
+              accept=".png,.jpg,.jpeg,.webp,.svg"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) setLogoPreview(URL.createObjectURL(file));
+              }}
+            />
             {!logoUrl && (
               <p style={{ fontSize: 9.5, color: "#32323a", marginTop: 6, textAlign: "center", letterSpacing: "0.03em" }}>
                 No logo set
