@@ -1,7 +1,7 @@
 // Build the SitePayload the renderer consumes on the Branding preview stage.
 //
 // Layering (highest wins):
-//   1. Branding draft — businessName, tagline, logoUrl
+//   1. Branding draft — businessName, tagline, logoUrl, theme selection
 //      (the fields the user is actively editing on the Branding page)
 //   2. Real published payload — everything else the business has saved
 //      (menu, products, services, gallery, testimonials, events, hours, socials)
@@ -13,6 +13,7 @@
 
 import type { SitePayload, BrandConfig } from "@/types/site";
 import type { KitCategory, KitFamily } from "@/types/kit";
+import type { ThemeTokens } from "@/lib/theme";
 import { getCategorySeed } from "./preview-seeds";
 
 export type BrandingDraft = {
@@ -21,6 +22,10 @@ export type BrandingDraft = {
   logoUrl?: string | null;
   heroImageUrl?: string | null;
   heroEyebrow?: string | null;
+  // Theme selection from the left-rail preset picker
+  themeMode?: "preset" | "custom";
+  themePresetId?: string;
+  themeTokens?: ThemeTokens;
 };
 
 export type BuildPreviewPayloadArgs = {
@@ -56,6 +61,16 @@ export function buildPreviewPayload(
     }
     if (brandingDraft.logoUrl !== undefined) {
       brandPatch.logoUrl = brandingDraft.logoUrl ?? undefined;
+    }
+    // Apply theme selection so the in-panel preview reflects the current preset/color choice.
+    if (brandingDraft.themeMode !== undefined) {
+      brandPatch.themeMode = brandingDraft.themeMode;
+    }
+    if (brandingDraft.themePresetId !== undefined) {
+      brandPatch.themePresetId = brandingDraft.themePresetId;
+    }
+    if (brandingDraft.themeTokens !== undefined) {
+      brandPatch.themeTokens = brandingDraft.themeTokens;
     }
     if (Object.keys(brandPatch).length > 0) {
       out.brand = { ...out.brand, ...brandPatch };

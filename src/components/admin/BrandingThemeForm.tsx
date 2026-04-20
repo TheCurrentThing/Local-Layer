@@ -245,7 +245,14 @@ export function BrandingThemeForm({
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
           <BrandingPreviewStage
             realPayload={payload}
-            brandingDraft={{ businessName, tagline, logoUrl: initialBrand.logoUrl ?? null }}
+            brandingDraft={{
+              businessName,
+              tagline,
+              logoUrl: initialBrand.logoUrl ?? null,
+              themeMode,
+              themePresetId: selectedPreset.id,
+              themeTokens: colors,
+            }}
             family={payload.kitFamily}
             category={payload.kitCategory}
           />
